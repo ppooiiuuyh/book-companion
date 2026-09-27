@@ -1,6 +1,6 @@
 ---
 name: bookc-5-synthesize
-description: book-companion 5단계. 장 요약·통독 메모·외부 조사를 종합해 책 전체 요약(L0)과 목차 겸 입구 문서(index.md), Claude의 독해와 외부 평가를 대조한 synthesis.md를 만든다. "/bookc-5-synthesize <책>", "책 종합 정리"에 쓴다.
+description: book-companion 5단계. 장 요약·통독 메모·외부 조사를 종합해 책 전체 요약(L0)과 목차 겸 입구 문서(index.md), Claude의 독해와 외부 평가를 대조한 synthesis.md를 만든다. "/bookc-5-synthesize [책]", "책 종합 정리"에 쓴다.
 ---
 
 # 5단계: 종합

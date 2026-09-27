@@ -1,6 +1,6 @@
 ---
 name: bookc-2-parse
-description: book-companion 2단계. 쪽 이미지와 초벌 OCR을 대조 교정해 장별 source.md(쪽·블록 앵커, 도표 이미지·판독표, 각주)를 만들고 lint·표본 감사를 통과시킨다. 끊긴 곳부터 이어서 한다. "/bookc-2-parse <책>", "책 파싱 계속", "원문 교정"에 쓴다.
+description: book-companion 2단계. 쪽 이미지와 초벌 OCR을 대조 교정해 장별 source.md(쪽·블록 앵커, 도표 이미지·판독표, 각주)를 만들고 lint·표본 감사를 통과시킨다. 끊긴 곳부터 이어서 한다. "/bookc-2-parse [책]", "책 파싱 계속", "원문 교정"에 쓴다.
 ---
 
 # 2단계: 파싱 (원본 대조 교정 · 조립)

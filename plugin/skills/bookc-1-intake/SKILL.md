@@ -1,6 +1,6 @@
 ---
 name: bookc-1-intake
-description: book-companion 1단계. 스캔 책 PDF에서 쪽 이미지를 꺼내고 장 구조(서문·장·뒷부분)를 검출·확인한 뒤 전 쪽 초벌 OCR을 한다. "/bookc-1-intake <pdf 경로 또는 파일명>", "책 인테이크", "책 구조 잡아줘"에 쓴다.
+description: book-companion 1단계. 스캔 책 PDF에서 쪽 이미지를 꺼내고 장 구조(서문·장·뒷부분)를 검출·확인한 뒤 전 쪽 초벌 OCR을 한다. "/bookc-1-intake [pdf 경로 또는 파일명]", "책 인테이크", "책 구조 잡아줘"에 쓴다.
 ---
 
 # 1단계: 인테이크
