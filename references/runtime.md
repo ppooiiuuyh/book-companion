@@ -101,3 +101,35 @@ exit 1이면 출력된 안내문을 사용자에게 그대로 전하고 **아무
 | 3 research | /bookc-3-research | 1 |
 | 4 read | /bookc-4-read | 2, 3 |
 | 5 synthesize | /bookc-5-synthesize | 4 |
+
+## 7. 진행 현황 기록 (progress.html)
+
+모든 bookc 스킬은 작업을 이벤트로 남긴다. 그러면 책 폴더의 `progress.html`(진행 대시보드)이 다시 그려진다.
+대시보드에는 전체 진행률, 경과·누적 시간, 동시 작업자 수, 예상 남은 시간, 단계별 막대, 작업자별 병렬 타임라인, 동시 작업 수·누적 교정 쪽수 그래프, 장별 현황 격자, 작업·이벤트 기록이 나온다.
+
+```bash
+export BOOKC_PROGRESS_COPY_DIR=/mnt/user-data/outputs/progress   # 방식 A: 매번 새 이름의 사본을 만들고 그 경로를 마지막 줄에 출력
+$BC log $B run-start run=bookc                 # 스킬 이름 (bookc, bookc-2-parse …)
+$BC log $B stage-start stage=parse             # 단계 스킬만. stage: intake|parse|research|study|read|synthesize
+$BC log $B wave-start wave=3                   # /bookc 파동만
+$BC log $B task-start task=parse:04a kind=parse chapter=04 pages=20 lane=1 label=04a
+$BC log $B task-end task=parse:04a status=ok   # 실패: status=fail note=이유
+$BC log $B wave-end wave=3
+$BC log $B stage-end stage=parse
+$BC log $B run-end status=done                 # 도중에 멈추면 stopped, 실패로 끝나면 failed
+```
+
+- **이벤트 값**
+  - `kind`는 parse, research, study, read, other 중 하나다. 인테이크, 직접 하는 조립·lint, 감사, 조사 병합, 종합은 other로 적는다.
+  - `task`는 한 실행 안에서 겹치지 않게 짓는다. 실패한 작업을 다시 시작하면 같은 이름을 써도 된다(재시도로 표시됨).
+  - `lane`은 작업자 번호(1–4)다.
+  - 한 파동의 task-start 여러 개는 `&&`로 이어 Bash 한 번에 기록한다.
+- **기기로 보내기 (방식 A)**
+  - log 출력의 마지막 줄이 사본 경로다. 이 경로를 `device_commit_files`에 넘긴다: stagedPath는 그 경로, devicePath는 `…/books/<slug>/progress.html`, `force: true`.
+  - 보내는 때는 세 번이다: 작업자를 띄우기 직전(task-start 기록 뒤), 파동이나 단계가 끝나고 후처리를 마친 뒤, 실행이 끝났을 때.
+  - 방식 B(로컬)는 책 폴더에 바로 쓰이므로 보낼 필요가 없다.
+- **처음 보낸 뒤**, 사용자에게 한 번만 알린다.
+  - 알릴 내용: 진행 현황은 `project/book-companion/books/<slug>/progress.html`이고, 브라우저로 열어 두면 실행 중에는 20초마다 새로 고쳐진다.
+  - computer:// 링크를 함께 준다.
+- **작업자가 도는 동안**에는 파일이 새로 쓰이지 않는다. 대신 페이지가 진행 중인 작업의 경과 시간과 '지금' 선을 스스로 움직인다.
+- **run-end 없이 끊긴 실행**은 다음 실행이 시작되면 '중단됨'으로 표시된다.

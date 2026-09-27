@@ -47,6 +47,11 @@ description: book-companion 4단계. 1차로 장별 요약(L2 절·L1 장)과 �
    - 후기나 옮긴이 후기가 있으면 `reading/90.md`에 짧게 메모한다(필수 아님).
    - `$BC status $B`와 장별 핵심을 한 줄씩 보고한다.
 
+## 진행 현황 기록 (runtime.md 7절)
+
+- 선행 검사를 통과하면 `$BC log $B run-start run=bookc-4-read`, 이어서 `$BC log $B stage-start stage=study`를 기록하고 progress.html을 기기로 보낸다. 위치는 한 번 알린다. 선행 검사에서 불가하면 아무것도 기록하지 않는다.
+- 1차는 `stage=study`, 2차는 `stage=read`로 나눠 stage-start/stage-end를 기록한다. 장마다 `kind=study` 또는 `kind=read` task를 기록한다(`label`=장 id). 2차는 장이 끝날 때마다 progress.html을 보낸다.
+- 끝나면 `stage-end`, `run-end status=done`을 기록하고 progress.html을 보낸다. 도중에 멈추면 `run-end status=stopped note=사유`를 기록한다.
 ## 규칙
 
 - study.md에는 원문에 있는 것만 쓴다. 해석, 평가, 외부 의견은 reading/에 쓴다.

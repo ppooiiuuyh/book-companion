@@ -31,6 +31,11 @@ description: book-companion 3단계. 책에 대한 서점 리뷰·블로그 후�
 > 결과는 `{book}/research/_parts/{part}.md` 한 파일로 씁니다. 구성은 `## 출처`(번호·제목·사이트·날짜·URL·한 줄 요지), `## 주요 내용·하이라이트`(장 표시), `## 비판·논쟁`, `## 통독 때 확인할 질문`이며, 모든 항목에 이 파일 안의 출처 번호를 답니다. 찾은 게 적으면 적은 대로 쓰고, "이 영역은 자료가 적음"이라고 밝힙니다.
 > 끝나면 출처 수와 가장 중요한 발견 2개만 한 줄로 돌려줍니다.
 
+## 진행 현황 기록 (runtime.md 7절)
+
+- 선행 검사를 통과하면 `$BC log $B run-start run=bookc-3-research`, 이어서 `$BC log $B stage-start stage=research`를 기록하고 progress.html을 기기로 보낸다. 위치는 한 번 알린다. 선행 검사에서 불가하면 아무것도 기록하지 않는다.
+- 영역 작업자마다 `kind=research label=<영역>` task를 기록하고, 병합은 `kind=other label=병합`으로 기록한다.
+- 끝나면 `stage-end`, `run-end status=done`을 기록하고 progress.html을 보낸다. 도중에 멈추면 `run-end status=stopped note=사유`를 기록한다.
 ## 규칙
 
 - 외부 의견은 `research/`에만 둔다. source.md와 study.md에 섞지 않는다.

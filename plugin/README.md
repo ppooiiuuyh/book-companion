@@ -32,12 +32,13 @@ PDF가 없는 전자책은 먼저 `~/project/book-companion/capture/eBookToPdf`�
     ├── NN_장/study.md    L1·L2 요약          (4단계)
     ├── reading/          통독 메모, _carry.md (4단계)
     ├── research/         sources·highlights·critiques·watchlist, _parts/(영역별 원자료) (3단계)
-    └── _work/            manifest(진행 상태), OCR, 교정 기록
+    ├── progress.html     진행 현황 대시보드(단계·경과 시간·진행률·병렬 타임라인). 실행 중 20초마다 새로 고침
+    └── _work/            manifest(진행 상태), OCR, 교정 기록, runlog.jsonl(실행 기록)
 ```
 
 ## 구성
 
-- `scripts/tools/bc.py`: CLI (intake · ocr · prepare · layout · apply · assemble · lint · notes · glossary · outline · status · can · next · todo · ready · mark · chapter · set · pack · unpack)
+- `scripts/tools/bc.py`: CLI (intake · ocr · prepare · layout · apply · assemble · lint · notes · glossary · outline · status · can · next · todo · ready · mark · log · progress · chapter · set · pack · unpack)
 - `scripts/models/tessdata/`: Tesseract 한국어 모델(tessdata_fast)과 출력 설정
 - `scripts/setup.sh`: tesseract와 python 패키지(pymupdf, pillow, numpy, rapidfuzz, kiwipiepy)를 준비합니다
 - `references/`: conventions(층·주소·교정 규약), runtime(환경·책 찾기·동기화), parse-worker(교정·감사 지시문)

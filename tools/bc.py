@@ -22,6 +22,9 @@
   bc.py mark      <book> <stage> [--chapters ..] [--files ..] [--undo]   stage: intake|parse|research|study|read|synthesize
   bc.py set       <book> key.path=JSON값 ...
   bc.py chapter   <book> add|edit|del <id> [label=.. title=.. pages=216-218 title_pages=216,217 back=1]
+기록·대시보드
+  bc.py log       <book> <event> k=v ...   run-start|run-end|stage-start|stage-end|wave-start|wave-end|task-start|task-end|note → progress.html 갱신
+  bc.py progress  <book>                 progress.html만 다시 그리기
 동기화
   bc.py pack      <book> <out.tgz>
   bc.py unpack    <book> <in.tgz>
@@ -208,6 +211,14 @@ def main():
         book.save()
         for c in chl:
             print(c["id"], c["pages"], c["label"], "|", c["title"], "| 표지", c.get("title_pages"), "| back" if c.get("back") else "")
+    elif a.cmd in ("log", "progress"):
+        from bookc import progress as pg
+        if a.cmd == "log":
+            kv = dict(x.split("=", 1) for x in a.rest[1:])
+            ev = pg.log(book, a.rest[0], **kv)
+            if ev["event"] == "run-start":
+                print("run_id", ev["run_id"])
+        print(pg.render(book))
     elif a.cmd == "pack":
         from bookc.state import pack
         print(pack(book, Path(a.rest[0])))

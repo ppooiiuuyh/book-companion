@@ -28,6 +28,11 @@ description: book-companion 5단계. 장 요약·통독 메모·외부 조사를
 4. `$BC lint $B` (전 장) 재확인. errors가 있으면 보고하고 고친다.
 5. `$BC mark $B synthesize` → 체크포인트 → `$BC status $B`와 L0 요약 3문장, 사용 방법(`/bookc-open <책>`)을 보고한다.
 
+## 진행 현황 기록 (runtime.md 7절)
+
+- 선행 검사를 통과하면 `$BC log $B run-start run=bookc-5-synthesize`, 이어서 `$BC log $B stage-start stage=synthesize`를 기록하고 progress.html을 기기로 보낸다. 위치는 한 번 알린다. 선행 검사에서 불가하면 아무것도 기록하지 않는다.
+- index.md와 synthesis.md 작성을 각각 `kind=other` task로 기록한다.
+- 끝나면 `stage-end`, `run-end status=done`을 기록하고 progress.html을 보낸다. 도중에 멈추면 `run-end status=stopped note=사유`를 기록한다.
 ## 규칙
 
 - index.md의 요약은 원문 근거만. 외부 의견과 Claude의 평가는 synthesis.md에.

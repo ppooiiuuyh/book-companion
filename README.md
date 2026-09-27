@@ -31,6 +31,10 @@ cd capture/eBookToPdf && poetry install && poetry run python eBookToPdf.py
 - macOS에서 실행하는 터미널에 손쉬운 사용, 입력 모니터링, 화면 기록 권한을 줘야 합니다.
 - GUI 도구라 Claude 세션에서는 실행할 수 없습니다. 원본은 eastshine12/eBookToPdf(MIT)이며, 원본 기록은 git에 병합되어 있습니다(원격 이름 `ebooktopdf`).
 
+## 진행 현황
+
+`/bookc`와 단계 스킬은 실행 기록을 `books/<책>/_work/runlog.jsonl`에 남깁니다. 기록할 때마다 `books/<책>/progress.html`(진행 대시보드)을 다시 그립니다. 브라우저로 열어 두면 실행 중에는 20초마다 새로 고쳐집니다. 직접 다시 그리려면 `python3 tools/bc.py progress books/<책>`을 실행합니다.
+
 ## git
 
 - 책에서 나온 것은 올리지 않습니다: `books-pdf/`(원본 PDF), `books/`(책별 산출물), 실험의 쪽 이미지·정답·OCR 출력. 모두 `.gitignore`에 들어 있습니다.

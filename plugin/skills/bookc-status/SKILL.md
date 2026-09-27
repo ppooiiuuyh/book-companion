@@ -13,3 +13,8 @@ description: book-companion 진행 상태 확인. 책 하나(또는 모든 책)�
 4. 마지막 줄에 다음에 실행할 명령(`/bookc <책>` 또는 단계 스킬)을 적는다.
 
 파일을 바꾸지 않는다.
+
+## 진행 현황 페이지
+
+- 인자가 있으면 `$BC progress $B`로 progress.html을 다시 그린다. 방식 A에서는 기기로 보낸다(runtime.md 7절).
+- 그다음 `project/book-companion/books/<slug>/progress.html` 위치를 computer:// 링크로 함께 알려 준다.

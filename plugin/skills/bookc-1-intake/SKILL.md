@@ -36,6 +36,11 @@ description: book-companion 1단계. 스캔 책 PDF에서 쪽 이미지를 꺼�
 7. **체크포인트**: runtime.md 4절대로 올려 보낸다.
 8. **보고**: `$BC outline $B`의 장 표와 `$BC status $B`, 분량 추정을 짧게 보여 주고, 다음 단계(`/bookc-2-parse`, `/bookc-3-research`)를 알려 준다.
 
+## 진행 현황 기록 (runtime.md 7절)
+
+- 선행 검사를 통과하면 `$BC log $B run-start run=bookc-1-intake`, 이어서 `$BC log $B stage-start stage=intake`를 기록하고 progress.html을 기기로 보낸다. 위치는 한 번 알린다. 선행 검사에서 불가하면 아무것도 기록하지 않는다.
+- 추출(`label=추출`), 구조 확인(`label=구조`), OCR(`label=OCR`)을 각각 `kind=other` task로 기록한다.
+- 끝나면 `stage-end`, `run-end status=done`을 기록하고 progress.html을 보낸다. 도중에 멈추면 `run-end status=stopped note=사유`를 기록한다.
 ## 주의
 
 - `--force`로 intake를 다시 돌리면 장 구조가 새로 검출되어 수동 수정이 사라진다. 교정(review)이 이미 있으면 쓰지 않는다.

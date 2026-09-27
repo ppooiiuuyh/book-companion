@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+__REFRESH__
+<title>__TITLE__ — 진행 현황</title>
+<style>
+.viz-root{color-scheme:light;
+  --page:#f9f9f7;--surface-1:#fcfcfb;--text-primary:#0b0b0b;--text-secondary:#52514e;--muted:#898781;
+  --grid:#e1e0d9;--axis:#c3c2b7;--border:rgba(11,11,11,.10);
+  --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;
+  --seq-lo:#cde2fb;--seq-mid:#86b6ef;--seq:#2a78d6;--pending:#f0efec;
+  --good:#0ca30c;--good-text:#006300;--warning:#fab219;--critical:#d03b3b}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) .viz-root{color-scheme:dark;
+  --page:#0d0d0d;--surface-1:#1a1a19;--text-primary:#fff;--text-secondary:#c3c2b7;--muted:#898781;
+  --grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,.10);
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;
+  --seq-lo:#184f95;--seq-mid:#256abf;--seq:#3987e5;--pending:#383835;--good-text:#0ca30c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page)}
+.viz-root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text-primary);background:var(--page);
+  padding:20px 24px 40px;max-width:1280px;margin:0 auto;font-size:14px;line-height:1.45}
+h1{font-size:20px;margin:0}
+h2{font-size:15px;margin:0 0 10px;font-weight:600}
+.sub{color:var(--text-secondary);font-size:13px}
+.muted{color:var(--muted)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.card{background:var(--surface-1);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-top:14px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:14px}
+.tile{background:var(--surface-1);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.tile .k{color:var(--text-secondary);font-size:12px}
+.tile .v{font-size:28px;font-weight:600;margin-top:2px}
+.tile .d{color:var(--muted);font-size:12px;margin-top:2px}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--border);color:var(--text-secondary)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.live .dot{background:var(--good);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+.meter{height:8px;border-radius:4px;background:var(--pending);overflow:hidden;margin-top:8px}
+.meter>i{display:block;height:100%;background:var(--seq);border-radius:4px}
+svg text{font-family:inherit}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary);margin-bottom:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:10px;border-radius:2px;display:inline-block}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:820px){.two{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--grid);vertical-align:top}
+th{color:var(--text-secondary);font-weight:600}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.grid td.cell{text-align:center;font-variant-numeric:tabular-nums;border-radius:4px;border:2px solid var(--surface-1);min-width:84px}
+.st-done{background:color-mix(in srgb,var(--good) 22%,var(--surface-1));color:var(--good-text)}
+.st-run{background:color-mix(in srgb,var(--s1) 25%,var(--surface-1));color:var(--text-primary);font-weight:600}
+.st-part{background:color-mix(in srgb,var(--s1) 10%,var(--surface-1));color:var(--text-primary)}
+.st-todo{background:var(--pending);color:var(--muted)}
+.st-na{color:var(--muted)}
+.st-fail{background:color-mix(in srgb,var(--critical) 18%,var(--surface-1));color:var(--critical)}
+select{font:inherit;padding:3px 6px;border-radius:6px;border:1px solid var(--border);background:var(--surface-1);color:var(--text-primary)}
+#tip{position:fixed;pointer-events:none;background:var(--surface-1);color:var(--text-primary);border:1px solid var(--border);
+  border-radius:8px;padding:8px 10px;font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,.12);display:none;z-index:9;max-width:320px}
+#tip b{font-size:14px}
+#tip .l{color:var(--text-secondary)}
+.hit:hover,.hit:focus{opacity:.8;outline:none}
+.running-bar{animation:soft 1.8s ease-in-out infinite}
+@keyframes soft{50%{opacity:.6}}
+details summary{cursor:pointer;color:var(--text-secondary)}
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <div class="row" style="justify-content:space-between">
+    <div>
+      <h1 id="title"></h1>
+      <div class="sub" id="subtitle"></div>
+    </div>
+    <div class="row">
+      <span id="state" class="badge"><i class="dot"></i><span></span></span>
+      <label class="sub">실행 <select id="runSel"></select></label>
+    </div>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="card">
+    <h2>단계별 진행</h2>
+    <div id="stages"></div>
+  </div>
+
+  <div class="card">
+    <h2>병렬 처리 타임라인</h2>
+    <div class="legend" id="kindLegend"></div>
+    <div id="gantt"></div>
+    <div class="sub" id="ganttNote"></div>
+  </div>
+
+  <div class="two">
+    <div class="card"><h2>동시 작업 수</h2><div id="conc"></div></div>
+    <div class="card"><h2>누적 교정 쪽수</h2><div id="cum"></div></div>
+  </div>
+
+  <div class="card">
+    <h2>지금 돌고 있는 작업</h2>
+    <div id="running"></div>
+  </div>
+
+  <div class="card">
+    <h2>장별 현황</h2>
+    <div class="legend">
+      <span><i style="background:color-mix(in srgb,var(--good) 22%,var(--surface-1))"></i>✓ 완료</span>
+      <span><i style="background:color-mix(in srgb,var(--s1) 25%,var(--surface-1))"></i>● 진행 중</span>
+      <span><i style="background:color-mix(in srgb,var(--s1) 10%,var(--surface-1))"></i>일부</span>
+      <span><i style="background:var(--pending)"></i>대기</span>
+    </div>
+    <div style="overflow-x:auto"><table class="grid" id="grid"></table></div>
+  </div>
+
+  <div class="card">
+    <details open><summary><h2 style="display:inline">작업 기록</h2></summary>
+      <div style="overflow-x:auto;margin-top:8px"><table id="tasks"></table></div>
+    </details>
+  </div>
+  <div class="card">
+    <details><summary><h2 style="display:inline">이벤트 로그</h2></summary>
+      <div style="overflow-x:auto;margin-top:8px"><table id="events"></table></div>
+    </details>
+  </div>
+  <div id="tip"></div>
+</div>
+<script>
+const D = __DATA__;
+const KINDS = [["parse","파싱","--s1"],["research","조사","--s2"],["study","통독 1차","--s3"],["read","통독 2차","--s4"],["other","기타","--s5"]];
+const KIND = Object.fromEntries(KINDS.map(k=>[k[0],k]));
+const css = n => getComputedStyle(document.querySelector('.viz-root')).getPropertyValue(n).trim();
+const $ = id => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent, text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e}
+function h(tag, attrs, parent, text){const e=document.createElement(tag);for(const k in (attrs||{}))e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e}
+const T = s => new Date(s).getTime();
+function dur(ms){if(ms<0||!isFinite(ms))return "–";const s=Math.round(ms/1000),hh=Math.floor(s/3600),mm=Math.floor(s%3600/60),ss=s%60;
+  return hh?`${hh}시간 ${mm}분`:mm?`${mm}분 ${ss}초`:`${ss}초`}
+const hm = t => new Date(t).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+const dt = t => new Date(t).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+const pct = v => (v*100).toFixed(v>=.995||v===0?0:1)+"%";
+
+// ---- 이벤트 → 실행·작업·파동 ----
+const runs=[]; let cur=null;
+for(const e of D.events){
+  if(e.event==="run-start"){cur={id:e.run_id,name:e.run||"bookc",start:T(e.ts),end:null,status:null,tasks:{},waves:{},events:[],startOverall:e.overall??0};runs.push(cur)}
+  if(!cur){cur={id:e.run_id||"legacy",name:"기록",start:T(e.ts),end:null,tasks:{},waves:{},events:[],startOverall:0};runs.push(cur)}
+  cur.events.push(e);
+  if(e.event==="run-end"){cur.end=T(e.ts);cur.status=e.status||"done"}
+  if(e.event==="task-start"){if(cur.tasks[e.task]){const o=cur.tasks[e.task];let n=2;while(cur.tasks[`${e.task}#${n}`])n++;cur.tasks[`${e.task}#${n}`]=o;}
+    cur.tasks[e.task]={id:e.task,kind:KIND[e.kind]?e.kind:"other",chapter:e.chapter||"",pages:e.pages,lane:e.lane,label:e.label||e.task,start:T(e.ts),end:null,status:"running",note:e.note||""}}
+  if(e.event==="task-end"&&cur.tasks[e.task]){const t=cur.tasks[e.task];t.end=T(e.ts);t.status=e.status||"ok";if(e.note)t.note=e.note}
+  if(e.event==="wave-start"){cur.waves[e.wave]={n:e.wave,start:T(e.ts),end:null}}
+  if(e.event==="wave-end"&&cur.waves[e.wave]){cur.waves[e.wave].end=T(e.ts)}
+  if(e.event==="stage-start"){cur.stage=e.stage}
+  if(e.event==="stage-end"&&cur.stage===e.stage){cur.stage=null}
+}
+const NOW = () => Date.now();
+const lastRun = runs[runs.length-1];
+const isLive = r => !!r && r===lastRun && r.end==null && D.active;
+for(const r of runs){for(const t of Object.values(r.tasks)){if(t.end==null&&!isLive(r)){t.status="stopped";t.end=r.end||T(r.events[r.events.length-1].ts)}}}
+
+// ---- 실행 선택 ----
+const sel=$('runSel');
+h('option',{value:'all'},sel,'전체 기록');
+runs.forEach((r,i)=>h('option',{value:String(i)},sel,`${r.name} · ${dt(r.start)}${isLive(r)?' (실행 중)':''}`));
+sel.value = runs.length? String(runs.length-1) : 'all';
+sel.onchange = renderAll;
+function scope(){if(sel.value==='all')return {runs, tasks:runs.flatMap(r=>Object.values(r.tasks)), waves:runs.flatMap(r=>Object.values(r.waves))};
+  const r=runs[+sel.value];return {runs:[r],tasks:Object.values(r.tasks),waves:Object.values(r.waves)}}
+
+// ---- 머리글 ----
+$('title').textContent = `『${D.title}』 진행 현황`;
+$('subtitle').textContent = `마지막 갱신 ${dt(T(D.generated))}` + (D.active?' · 실행 중에는 20초마다 새로 고침':'');
+const stEl=$('state'); if(isLive(lastRun)){stEl.classList.add('live');stEl.lastChild.textContent=`실행 중 · ${lastRun.name}${lastRun.stage?' · '+(D.stageLabel[lastRun.stage]||lastRun.stage):''}`}
+else{stEl.querySelector('.dot').style.background=css('--muted');stEl.lastChild.textContent= lastRun?`멈춤 · 마지막 실행 ${lastRun.status||'중단'}`:'실행 기록 없음'}
+
+const tip=$('tip');
+function showTip(ev, rows){tip.innerHTML='';for(const [strong,label] of rows){const d=h('div',{},tip);if(strong!=null)h('b',{},d,strong);if(label)h('span',{class:'l'},d,(strong!=null?' ':'')+label)}
+  tip.style.display='block';const x=Math.min(ev.clientX+14,innerWidth-tip.offsetWidth-8),y=Math.min(ev.clientY+14,innerHeight-tip.offsetHeight-8);tip.style.left=x+'px';tip.style.top=y+'px'}
+const hideTip=()=>tip.style.display='none';
+function hover(node, rowsFn){node.classList.add('hit');node.setAttribute('tabindex','0');
+  node.addEventListener('pointermove',e=>showTip(e,rowsFn()));node.addEventListener('pointerleave',hideTip);
+  node.addEventListener('focus',e=>{const b=node.getBoundingClientRect();showTip({clientX:b.right,clientY:b.top},rowsFn())});node.addEventListener('blur',hideTip)}
+
+// ---- 타일 ----
+function renderTiles(){
+  const box=$('tiles');box.innerHTML='';const S=scope(), m=D.metrics;
+  const tile=(k,v,d,meter)=>{const t=h('div',{class:'tile'},box);h('div',{class:'k'},t,k);const vv=h('div',{class:'v'},t,v);if(meter!=null){const mm=h('div',{class:'meter'},t);h('i',{style:`width:${meter*100}%`},mm)}if(d)h('div',{class:'d'},t,d);return vv};
+  tile('전체 진행률',pct(m.overall),'단계별 작업량 가중 추정',m.overall);
+  const r=sel.value==='all'?lastRun:runs[+sel.value];
+  const runMs=r?((r.end??(isLive(r)?NOW():T(r.events[r.events.length-1].ts)))-r.start):NaN;
+  const ve=tile(sel.value==='all'?'마지막 실행 경과':'이번 실행 경과',dur(runMs),r?`${dt(r.start)} 시작`:'');ve.dataset.live=r&&isLive(r)?String(r.start):'';
+  const total=runs.reduce((a,x)=>a+((x.end??(isLive(x)?NOW():T(x.events[x.events.length-1].ts)))-x.start),0);
+  tile('누적 실행 시간',dur(total),`실행 ${runs.length}회`);
+  const act=S.tasks.filter(t=>t.status==='running').length;
+  tile('동시 작업자',`${act} / 4`, act?S.tasks.filter(t=>t.status==='running').map(t=>t.label).join(', '):'지금은 대기 중');
+  // 예상 남은 시간: 이번 실행의 진행률 증가 속도로 선형 추정
+  let eta='–',etaD='진행이 2% 이상 쌓이면 추정';
+  if(r){const endOv=[...r.events].reverse().find(e=>e.overall!=null)?.overall??m.overall;const gained=endOv-(r.startOverall||0);const el_=(r.end??NOW())-r.start;
+    if(gained>0.02&&m.overall<1){eta=dur((1-m.overall)/(gained/el_));etaD='이번 실행 속도 기준 선형 추정'}}
+  if(m.overall>=1){eta='완료';etaD=''}
+  tile('예상 남은 시간',eta,etaD);
+}
+
+// ---- 단계 막대 ----
+function renderStages(){
+  const box=$('stages');box.innerHTML='';const S=D.metrics.stages;const keys=Object.keys(D.stageLabel);
+  const running=new Set(scope().tasks.filter(t=>t.status==='running').map(t=>t.kind==='other'?'':t.kind));
+  if(isLive(lastRun)&&lastRun.stage)running.add(lastRun.stage==='read'?'read':lastRun.stage);
+  const focus=isLive(lastRun)&&lastRun.stage;
+  const W=Math.max(360,box.clientWidth||900),lab=150,val=Math.min(360,Math.max(250,W*0.34)),bw=W-lab-val-16,rh=30;
+  const svg=el('svg',{width:W,height:keys.length*rh+6,role:'img','aria-label':'단계별 진행 막대'},box);
+  keys.forEach((k,i)=>{const s=S[k]||{value:0,text:''},y=i*rh+4;
+    const on=focus&&(focus===k||(focus==='read'&&k==='study'));if(on)el('rect',{x:-2,y:y,width:W,height:rh-2,rx:6,fill:css('--seq'),opacity:.08},svg);
+    el('text',{x:0,y:y+15,fill:css('--text-primary'),'font-size':13,'font-weight':on?700:400},svg,(on?'▶ ':'')+D.stageLabel[k]);
+    el('rect',{x:lab,y:y+6,width:bw,height:12,rx:4,fill:css('--pending')},svg);
+    const w=Math.max(s.value>0?4:0,bw*s.value);
+    const bar=el('rect',{x:lab,y:y+6,width:w,height:12,rx:4,fill:s.done?css('--good'):css('--seq')},svg);
+    if(running.has(k))bar.setAttribute('class','running-bar');
+    const tag=s.done?'✓ 완료':running.has(k)?'● 진행 중':s.value>0?'':'대기';
+    el('text',{x:lab+bw+10,y:y+15,fill:css('--text-secondary'),'font-size':12},svg,`${pct(s.value)} · ${s.text}${tag?' · '+tag:''}`);
+    const hit=el('rect',{x:0,y:y,width:W,height:rh,fill:'transparent'},svg);
+    hover(hit,()=>[[pct(s.value),D.stageLabel[k]],[null,s.text],[null,`가중치 ${D.weights[k]}%`]]);
+  });
+}
+
+// ---- 간트 ----
+function renderGantt(){
+  const box=$('gantt');box.innerHTML='';const S=scope();const tasks=S.tasks.slice().sort((a,b)=>a.start-b.start);
+  const lg=$('kindLegend');lg.innerHTML='';KINDS.filter(k=>tasks.some(t=>t.kind===k[0])||k[0]!=='other').forEach(k=>{const s=h('span',{},lg);h('i',{style:`background:var(${k[2]})`},s);s.appendChild(document.createTextNode(k[1]))});
+  if(!tasks.length){h('div',{class:'muted'},box,'아직 기록된 작업이 없습니다. /bookc를 실행하면 여기에 작업자별 막대가 그려집니다.');$('ganttNote').textContent='';return}
+  // 레인: 기록된 lane 우선, 없으면 빈 레인에 배정
+  const lanes=[];for(const t of tasks){let L=t.lane!=null?+t.lane-1:-1;
+    if(L<0||(lanes[L]&&lanes[L]>t.start+1000)){L=lanes.findIndex(e=>e<=t.start+1000);if(L<0)L=lanes.length}
+    t._lane=L;lanes[L]=t.end??Infinity}
+  const nL=Math.max(1,lanes.length);
+  const t0=Math.min(...tasks.map(t=>t.start),...S.runs.map(r=>r.start));
+  const t1=Math.max(NOW()*(S.runs.some(isLive)?1:0),...tasks.map(t=>t.end??NOW()),...S.runs.map(r=>r.end??r.start));
+  const W=Math.max(480,box.clientWidth||900),L=70,R=16,top=22,lh=34,H=top+nL*lh+28;
+  const x=v=>L+(v-t0)/Math.max(1,(t1-t0))*(W-L-R);
+  const svg=el('svg',{width:W,height:H,role:'img','aria-label':'작업자 레인별 작업 타임라인'},box);
+  // 파동 배경
+  Object.values(S.waves).forEach((w,i)=>{const a=x(w.start),b=x(w.end??NOW());
+    el('rect',{x:a,y:top-4,width:Math.max(1,b-a),height:nL*lh+4,fill:css('--text-primary'),opacity:i%2?0.02:0.045},svg);
+    el('text',{x:a+3,y:top-8,fill:css('--muted'),'font-size':11},svg,`파동 ${w.n}`)});
+  // 시간 눈금
+  const span=t1-t0,step=[60e3,300e3,600e3,1800e3,3600e3,7200e3,21600e3,86400e3].find(s=>span/s<=8)||86400e3;
+  for(let v=Math.ceil(t0/step)*step;v<=t1;v+=step){el('line',{x1:x(v),x2:x(v),y1:top-4,y2:top+nL*lh,stroke:css('--grid')},svg);
+    el('text',{x:x(v),y:H-8,'text-anchor':'middle',fill:css('--muted'),'font-size':11},svg,hm(v))}
+  for(let i=0;i<nL;i++)el('text',{x:0,y:top+i*lh+lh/2+4,fill:css('--text-secondary'),'font-size':12},svg,`작업자 ${i+1}`);
+  for(const t of tasks){const a=x(t.start),b=x(t.end??NOW()),y=top+t._lane*lh+6,w=Math.max(4,b-a-2);
+    const fill=t.status==='fail'?css('--critical'):css(KIND[t.kind][2]);
+    const r=el('rect',{x:a,y:y,width:w,height:lh-12,rx:4,fill:fill,opacity:t.status==='stopped'?.45:1},svg);
+    if(t.status==='running')r.setAttribute('class','running-bar');
+    const lbl=t.label+(t.status==='fail'?' ✕':t.status==='running'?' ●':'');
+    if(w>lbl.length*7+10)el('text',{x:a+6,y:y+(lh-12)/2+4,fill:'#fff','font-size':11,'font-weight':600,'pointer-events':'none'},svg,lbl);
+    const hit=el('rect',{x:a-2,y:y-4,width:w+4,height:lh-4,fill:'transparent'},svg);
+    hover(hit,()=>[[dur((t.end??NOW())-t.start),`${KIND[t.kind][1]} · ${t.label}`],[null,`${dt(t.start)} 시작`+(t.end?` → ${hm(t.end)}`:' · 진행 중')],
+      [null,{ok:'완료',fail:'실패',running:'진행 중',stopped:'중단됨'}[t.status]||t.status],...(t.pages?[[null,`${t.pages}쪽`]]:[]),...(t.note?[[null,t.note]]:[])]);
+  }
+  if(S.runs.some(isLive)){const nx=x(NOW());el('line',{x1:nx,x2:nx,y1:top-4,y2:top+nL*lh,stroke:css('--text-primary'),'stroke-width':1.5,'stroke-dasharray':'3 3'},svg);
+    el('text',{x:nx,y:top+nL*lh+14,'text-anchor':'middle',fill:css('--text-primary'),'font-size':11,'font-weight':600},svg,'지금')}
+  const done=tasks.filter(t=>t.status==='ok').length,fail=tasks.filter(t=>t.status==='fail').length;
+  const busy=tasks.reduce((a,t)=>a+((t.end??NOW())-t.start),0),wall=Math.max(1,t1-t0);
+  $('ganttNote').textContent=`작업 ${tasks.length}개 (완료 ${done}${fail?`, 실패 ${fail}`:''}) · 평균 동시 작업 ${(busy/wall).toFixed(1)}개 · 막대에 마우스를 올리면 자세히 보입니다`;
+}
+
+// ---- 선 그래프(십자선) ----
+function lineChart(box, pts, opt){box.innerHTML='';
+  if(pts.length<2){h('div',{class:'muted'},box,'기록이 쌓이면 그려집니다.');return}
+  const W=Math.max(300,box.clientWidth||450),H=170,L=40,R=12,top=10,B=24;
+  const xs=pts.map(p=>p[0]),t0=Math.min(...xs),t1=Math.max(...xs),ymax=Math.max(opt.ymin||1,...pts.map(p=>p[1]));
+  const x=v=>L+(v-t0)/Math.max(1,t1-t0)*(W-L-R),y=v=>top+(1-v/ymax)*(H-top-B);
+  const svg=el('svg',{width:W,height:H,role:'img','aria-label':opt.name},box);
+  [0,.5,1].forEach(f=>{const v=Math.round(ymax*f);el('line',{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:css('--grid')},svg);el('text',{x:L-6,y:y(v)+4,'text-anchor':'end',fill:css('--muted'),'font-size':11},svg,v)});
+  el('text',{x:L,y:H-6,fill:css('--muted'),'font-size':11},svg,hm(t0));el('text',{x:W-R,y:H-6,'text-anchor':'end',fill:css('--muted'),'font-size':11},svg,hm(t1));
+  let d='';pts.forEach((p,i)=>{d+= i? (opt.step?`H${x(p[0])}V${y(p[1])}`:`L${x(p[0])},${y(p[1])}`):`M${x(p[0])},${y(p[1])}`});
+  el('path',{d,fill:'none',stroke:css('--seq'),'stroke-width':2,'stroke-linejoin':'round'},svg);
+  const last=pts[pts.length-1];el('circle',{cx:x(last[0]),cy:y(last[1]),r:4,fill:css('--seq'),stroke:css('--surface-1'),'stroke-width':2},svg);
+  el('text',{x:x(last[0])-6,y:y(last[1])-8,'text-anchor':'end',fill:css('--text-primary'),'font-size':12,'font-weight':600},svg,`${last[1]}${opt.unit}`);
+  const cross=el('line',{y1:top,y2:H-B,stroke:css('--axis'),visibility:'hidden'},svg);
+  const hit=el('rect',{x:L,y:top,width:W-L-R,height:H-top-B,fill:'transparent'},svg);
+  hit.addEventListener('pointermove',e=>{const b=svg.getBoundingClientRect(),mx=e.clientX-b.left,tv=t0+(mx-L)/(W-L-R)*(t1-t0);
+    let best=pts[0];for(const p of pts){if(opt.step?p[0]<=tv:Math.abs(p[0]-tv)<Math.abs(best[0]-tv))best=p}
+    cross.setAttribute('x1',x(opt.step?tv:best[0]));cross.setAttribute('x2',x(opt.step?tv:best[0]));cross.setAttribute('visibility','visible');
+    showTip(e,[[`${best[1]}${opt.unit}`,opt.name],[null,dt(opt.step?tv:best[0])]])});
+  hit.addEventListener('pointerleave',()=>{cross.setAttribute('visibility','hidden');hideTip()});
+}
+function renderLines(){const S=scope();
+  const ev=[];S.tasks.forEach(t=>{ev.push([t.start,1]);if(t.end!=null)ev.push([t.end,-1])});ev.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  let c=0;const pts=[];if(ev.length)pts.push([ev[0][0],0]);for(const [t,dlt] of ev){c+=dlt;pts.push([t,c])}
+  if(S.runs.some(isLive)&&pts.length)pts.push([NOW(),c]);
+  lineChart($('conc'),pts,{step:true,unit:'개',name:'동시 작업 수',ymin:4});
+  const cum=S.runs.flatMap(r=>r.events).filter(e=>e.pages_rev!=null).map(e=>[T(e.ts),e.pages_rev]);
+  lineChart($('cum'),cum,{unit:'쪽',name:`누적 교정 쪽수 (전체 ${D.metrics.pages_tot}쪽)`,ymin:D.metrics.pages_tot||1});
+}
+
+// ---- 진행 중 목록 ----
+function renderRunning(){const box=$('running');box.innerHTML='';const run=scope().tasks.filter(t=>t.status==='running');
+  if(!run.length){h('div',{class:'muted'},box,isLive(lastRun)?'파동 사이 후처리(조립·lint·동기화) 중입니다.':'지금 돌고 있는 작업이 없습니다.');return}
+  const tb=h('table',{},box);const hr=h('tr',{},h('thead',{},tb));['작업','종류','장','쪽','경과'].forEach(s=>h('th',{class:s==='쪽'||s==='경과'?'num':''},hr,s));
+  const body=h('tbody',{},tb);for(const t of run){const r=h('tr',{},body);h('td',{},r,'● '+t.label);h('td',{},r,KIND[t.kind][1]);h('td',{},r,t.chapter);h('td',{class:'num'},r,t.pages??'');
+    const c=h('td',{class:'num'},r,dur(NOW()-t.start));c.dataset.since=t.start}}
+
+// ---- 장 격자 ----
+function renderGrid(){const tb=$('grid');tb.innerHTML='';const run=scope().tasks.filter(t=>t.status==='running');
+  const busy=(kind,ch)=>run.some(t=>t.kind===kind&&String(t.chapter)===String(ch));
+  const hr=h('tr',{},h('thead',{},tb));['장','교정','조립','통독 1차','통독 2차'].forEach(s=>h('th',{},hr,s));
+  const body=h('tbody',{},tb);
+  for(const g of D.grid){const r=h('tr',{},body);h('td',{},r,`${g.id} ${g.title}`);
+    const cell=(cls,txt,tipRows)=>{const c=h('td',{class:'cell '+cls},r,txt);if(tipRows)hover(c,()=>tipRows);return c};
+    const pr=g.pages?g.reviewed/g.pages:1;
+    cell(busy('parse',g.id)?'st-run':pr>=1?'st-done':pr>0?'st-part':'st-todo',`${busy('parse',g.id)?'● ':pr>=1?'✓ ':''}${g.reviewed}/${g.pages}`,[[`${g.reviewed}/${g.pages}쪽`,'교정'],[null,g.title]]);
+    cell(g.assembled?'st-done':'st-todo',g.assembled?'✓':'대기');
+    if(g.back){cell('st-na','–');cell('st-na','–')}
+    else{cell(busy('study',g.id)?'st-run':g.study?'st-done':'st-todo',busy('study',g.id)?'● 진행 중':g.study?'✓':'대기');
+         cell(busy('read',g.id)?'st-run':g.read?'st-done':'st-todo',busy('read',g.id)?'● 진행 중':g.read?'✓':'대기')}
+  }}
+
+// ---- 표 ----
+function renderTables(){const S=scope();
+  const tt=$('tasks');tt.innerHTML='';const hr=h('tr',{},h('thead',{},tt));['시작','작업','종류','장','쪽','소요','상태','메모'].forEach(s=>h('th',{class:['쪽','소요'].includes(s)?'num':''},hr,s));
+  const tb=h('tbody',{},tt);S.tasks.slice().sort((a,b)=>b.start-a.start).forEach(t=>{const r=h('tr',{},tb);
+    [dt(t.start),t.label,KIND[t.kind][1],t.chapter,t.pages??'',dur((t.end??NOW())-t.start),{ok:'✓ 완료',fail:'✕ 실패',running:'● 진행 중',stopped:'중단됨'}[t.status]||t.status,t.note].forEach((v,i)=>h('td',{class:[4,5].includes(i)?'num':''},r,v))});
+  const et=$('events');et.innerHTML='';const eh=h('tr',{},h('thead',{},et));['시각','이벤트','내용'].forEach(s=>h('th',{},eh,s));
+  const eb=h('tbody',{},et);S.runs.flatMap(r=>r.events).slice(-200).reverse().forEach(e=>{const r=h('tr',{},eb);h('td',{},r,dt(T(e.ts)));h('td',{},r,e.event);
+    const {ts,event,run_id,...rest}=e;h('td',{class:'muted'},r,Object.entries(rest).map(([k,v])=>`${k}=${v}`).join('  '))});
+}
+
+function renderAll(){renderTiles();renderStages();renderGantt();renderLines();renderRunning();renderGrid();renderTables()}
+renderAll();
+addEventListener('resize',()=>{clearTimeout(window._rz);window._rz=setTimeout(renderAll,150)});
+// 실행 중이면 경과 시간은 1초마다, 타임라인은 10초마다 갱신
+if(isLive(lastRun)){
+  setInterval(()=>{document.querySelectorAll('[data-since]').forEach(c=>c.textContent=dur(NOW()-(+c.dataset.since)));
+    document.querySelectorAll('.tile .v[data-live]').forEach(v=>{if(v.dataset.live)v.textContent=dur(NOW()-(+v.dataset.live))})},1000);
+  setInterval(()=>{renderGantt();renderLines()},10000);
+}
+</script>
+</body>
+</html>

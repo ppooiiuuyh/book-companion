@@ -37,6 +37,16 @@ description: book-companion 전체 실행. 스캔 책 PDF 하나를 인테이크
 
 파싱이 모두 끝나면 2단계 7번(표본 감사)을 한다. 이때 장마다 감사자를 따로 두어 **병렬로** 돌린다(최대 4). 그다음 `$BC glossary $B`를 실행한다. 이 두 가지는 2단계의 끝으로 치며, 통독 2차와 겹쳐 진행해도 된다.
 
+## 진행 현황 기록 (runtime.md 7절)
+
+- **시작**: 준비와 책 찾기가 끝나면 `$BC log $B run-start run=bookc`을 기록하고 progress.html을 기기로 보낸다. 위치는 한 번 알린다.
+- **인테이크가 남아 있으면**: `stage-start stage=intake`로 시작하고 `stage-end`로 닫는다. 추출, 구조 확인, OCR은 각각 `kind=other` task로 기록한다.
+- **파동마다**
+  1. `wave-start wave=N`, 이어서 작업자마다 `task-start`를 기록한다(`lane`=1…4, `label`=장 id 또는 조사 영역, parse면 `pages`=맡긴 쪽 수). 그다음 progress.html을 보내고 Agent를 띄운다.
+  2. Agent가 돌아오면 작업마다 `task-end status=ok|fail`을 기록한다.
+  3. 직접 하는 후처리(조립·lint, 조사 병합)도 `kind=other` task로 짧게 기록한다. 끝나면 `wave-end`, 체크포인트, progress.html 보내기 순서로 마친다.
+- **감사·종합**: 감사자는 `kind=other label=감사 NN`으로, 종합은 `kind=other label=종합`으로 기록한다.
+- **끝**: `run-end status=done`을 기록하고 progress.html을 보낸다. 4절 사유로 멈추면 `run-end status=stopped note=사유`를 기록한다.
 ## 3. 마무리
 
 1. `$BC can $B synthesize`가 통과하면 `PLUGIN/skills/bookc-5-synthesize/SKILL.md`의 절차를 수행한다.

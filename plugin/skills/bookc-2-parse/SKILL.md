@@ -37,6 +37,11 @@ $BC can $B parse || exit   # 불가하면 출력 안내문을 그대로 전하�
 7. **표본 감사**: 이번 실행에서 교정한 쪽 중 무작위로 장마다 1–2쪽(전체 최소 3쪽)을 골라 parse-worker.md의 감사자 지시문으로 맡긴다. 장마다 감사자 하나씩, 한 메시지에 여러 Agent 호출로 **병렬** 실행한다(최대 4). 불일치가 나오면 review를 고치고 해당 장을 다시 6번. 불일치율이 쪽당 3건을 넘으면 그 장 전체를 다른 작업자에게 재검토시킨다.
 8. **마무리**: `$BC glossary $B` → 체크포인트 → `$BC status $B` 표와 함께 교정 통계(교정 쪽 수, 도표 수, unsure 목록, 감사 결과)를 짧게 보고한다. `unsure`가 남았으면 쪽 번호를 알려 주고 사용자 확인을 권한다.
 
+## 진행 현황 기록 (runtime.md 7절)
+
+- 선행 검사를 통과하면 `$BC log $B run-start run=bookc-2-parse`, 이어서 `$BC log $B stage-start stage=parse`를 기록하고 progress.html을 기기로 보낸다. 위치는 한 번 알린다. 선행 검사에서 불가하면 아무것도 기록하지 않는다.
+- 주석 장 교정, 교정 작업자(장·절반마다), 장별 조립·lint(`kind=other label=조립 NN`), 감사자(`kind=other label=감사 NN`)를 task로 기록한다. 작업자를 띄우기 전과 장 조립이 끝날 때마다 progress.html을 보낸다.
+- 끝나면 `stage-end`, `run-end status=done`을 기록하고 progress.html을 보낸다. 도중에 멈추면 `run-end status=stopped note=사유`를 기록한다.
 ## 규칙
 
 - 교정의 정답은 쪽 이미지다. 초안(draft)이나 앞 장 결과를 근거로 고치지 않는다.
