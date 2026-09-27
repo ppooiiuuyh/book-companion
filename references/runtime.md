@@ -36,7 +36,7 @@ BC="$PY PLUGIN/scripts/tools/bc.py"
 1. **경로**(`/` 포함 또는 `~`로 시작): 그 PDF를 쓴다. `books-pdf/` 밖에 있으면 `cp -n`으로 `books-pdf/`에 복사해 두고, 복사했다고 한 줄 알린다(다음부터 파일명으로 부를 수 있게).
 2. **파일명**: `books-pdf/`에서만 찾는다. macOS 파일명은 NFD일 수 있으므로 NFC로 정규화해 비교한다.
    - 정확히 같은 이름 → 그 파일. `.pdf`를 빼고 줘도 된다.
-   - 아니면 부분 일치. 여러 개면 목록을 보여 주고 AskUserQuestion으로 고르게 한다. 없으면 `books-pdf/` 목록을 보여 주고 멈춘다.
+   - 아니면 부분 일치. 여러 개면 목록을 보여 주고 AskUserQuestion으로 고르게 한다. 없으면 `books-pdf/` 목록을 보여 주고 멈춘다. 이때 PDF가 아직 없는 전자책이면 `PROJECT/capture/eBookToPdf`(0단계 캡처, Mac GUI — 사용자가 직접 실행, 저장 경로 기본값이 `books-pdf/`)로 만들 수 있다고 한 줄 안내한다.
    ```bash
    python3 - <<'EOF'
    import unicodedata, pathlib, sys
