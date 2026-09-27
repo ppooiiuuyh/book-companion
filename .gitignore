@@ -1,0 +1,22 @@
+# 원본 PDF (용량 큼, 저작물)
+books-pdf/
+# 다시 만들 수 있는 기계 산출물
+books/*/_work/pages/
+books/*/_work/layout/
+books/*/_work/draft/
+books/*/_work/final/
+# 동기화·전송 임시 파일
+*.tgz
+_xfer/
+_gittest/
+# 빌드 산출물
+plugin/*.plugin
+# 캡처 도구의 로컬 산출물
+capture/eBookToPdf/dist/
+capture/eBookToPdf/pdf_images/
+capture/eBookToPdf/*_images/
+capture/eBookToPdf/*.pdf
+# 기타
+__pycache__/
+.DS_Store
+.venv/
