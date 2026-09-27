@@ -16,9 +16,25 @@ book-companion/
 │   ├── glossary.md
 │   └── _work/manifest.json, review/*.json   ← 기계 기록 중 보존할 것
 ├── books-pdf/             ← PDF 보관 (/bookc <파일명> 은 여기서만 찾음)
+├── capture/eBookToPdf/    ← 0단계: 전자책 뷰어 화면 캡처 → PDF (Mac GUI, 사용자가 직접 실행)
 ├── plugin/                ← 스킬 패키지(.plugin)
 └── experiments/           ← ocr-bakeoff(엔진 비교), pilot-eval(파일럿 검증)
 ```
+
+## 0단계: 캡처 (PDF가 없을 때)
+
+```bash
+cd capture/eBookToPdf && poetry install && poetry run python eBookToPdf.py
+```
+
+- 저장 경로 기본값이 `books-pdf/`라서, 만든 PDF는 바로 `/bookc <파일명>`으로 부를 수 있습니다. 캡처 이미지와 로그는 `capture/eBookToPdf/_captures/`에 쌓이고 git에는 들어가지 않습니다.
+- macOS에서 실행하는 터미널에 손쉬운 사용, 입력 모니터링, 화면 기록 권한을 줘야 합니다.
+- GUI 도구라 Claude 세션에서는 실행할 수 없습니다. 원본은 eastshine12/eBookToPdf(MIT)이며, 원본 기록은 git에 병합되어 있습니다(원격 이름 `ebooktopdf`).
+
+## git
+
+- 로컬 전용 레포입니다. `books/`에는 책 원문이 들어가므로 **공개 원격에 push하지 않습니다.**
+- 원본 PDF(`books-pdf/`), 다시 만들 수 있는 `_work/{pages,layout,draft,final}`, 동기화 파일(`*.tgz`)은 `.gitignore`로 뺐습니다.
 
 ## 파이프라인
 

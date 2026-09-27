@@ -20,3 +20,4 @@ capture/eBookToPdf/*.pdf
 __pycache__/
 .DS_Store
 .venv/
+capture/eBookToPdf/_captures/

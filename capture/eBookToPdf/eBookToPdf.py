@@ -17,6 +17,11 @@ import traceback
 import faulthandler
 from datetime import datetime
 
+# book-companion 연결: 이 파일이 book-companion/capture/eBookToPdf/에 있을 때의 경로
+_HERE = os.path.dirname(os.path.abspath(__file__))
+BC_PDF_DIR = os.path.normpath(os.path.join(_HERE, "..", "..", "books-pdf"))
+CAPTURE_WORK_DIR = os.path.join(_HERE, "_captures")
+
 faulthandler.enable()  # 강제 종료 시 어느 줄에서 죽었는지 터미널에 출력
 
 import mss
@@ -286,7 +291,8 @@ class MainWindow(QMainWindow):
         # 저장 설정
         save_box = QGroupBox("저장 설정")
         g2 = QGridLayout(save_box)
-        default_dir = os.path.join(os.path.expanduser("~"), "Desktop")
+        # book-companion 안에서 실행하면 기본 저장 경로는 books-pdf/ (파이프라인이 여기서 PDF를 찾는다)
+        default_dir = BC_PDF_DIR if os.path.isdir(BC_PDF_DIR) else os.path.join(os.path.expanduser("~"), "Desktop")
         if not os.path.isdir(default_dir):
             default_dir = os.path.expanduser("~")
         self.input_dir = QLineEdit(default_dir)
@@ -411,9 +417,14 @@ class MainWindow(QMainWindow):
     def _paths(self):
         save_dir = self.input_dir.text().strip()
         name = self.input_name.text().strip() or "default"
-        img_dir = os.path.join(save_dir, f"{name}_images")
+        work_dir = save_dir
+        if os.path.isdir(BC_PDF_DIR) and os.path.isdir(save_dir) and os.path.samefile(save_dir, BC_PDF_DIR):
+            # books-pdf/에는 PDF만 두고, 캡처 이미지·로그는 capture/eBookToPdf/_captures/에 둔다
+            work_dir = CAPTURE_WORK_DIR
+            os.makedirs(work_dir, exist_ok=True)
+        img_dir = os.path.join(work_dir, f"{name}_images")
         pdf_path = os.path.join(save_dir, f"{name}.pdf")
-        log_path = os.path.join(save_dir, f"{name}_log.txt")
+        log_path = os.path.join(work_dir, f"{name}_log.txt")
         return save_dir, name, img_dir, pdf_path, log_path
 
     def _browse_dir(self):

@@ -1,4 +1,8 @@
 # eBookToPdf
+
+> **book-companion 안의 개선판(macOS)입니다.** 이 문서 아래쪽의 사용법은 원본(Windows용 exe)을 기준으로 쓴 것입니다.
+> 실행: `poetry install && poetry run python eBookToPdf.py`. 저장 경로 기본값은 `../../books-pdf/`이고, 캡처 이미지와 로그는 `_captures/`에 저장됩니다.
+> 바뀐 점: Retina 원본 해상도 캡처, 저장 경로 설정, 로그, 진행률, 중단·이어하기, 이미 캡처한 이미지로 PDF만 만들기. 윈도 실행 파일(`dist/`)은 뺐습니다.
 E-Book PDF 추출 프로그램<br /><br />
 제작 과정 : https://eastshine12.tistory.com/55
 <br /><br /><br />
