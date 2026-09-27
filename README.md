@@ -17,7 +17,7 @@ book-companion/
 │   └── _work/manifest.json, review/*.json   ← 기계 기록 중 보존할 것
 ├── books-pdf/             ← PDF 보관 (/bookc <파일명> 은 여기서만 찾음)
 ├── capture/eBookToPdf/    ← 0단계: 전자책 뷰어 화면 캡처 → PDF (Mac GUI, 사용자가 직접 실행)
-├── plugin/                ← 스킬 패키지(.plugin)
+├── plugin/                ← 스킬 플러그인 소스(skills·setup) + build.sh → plugin/dist/book-companion.plugin
 └── experiments/           ← ocr-bakeoff(엔진 비교), pilot-eval(파일럿 검증)
 ```
 
@@ -33,8 +33,9 @@ cd capture/eBookToPdf && poetry install && poetry run python eBookToPdf.py
 
 ## git
 
-- 로컬 전용 레포입니다. `books/`에는 책 원문이 들어가므로 **공개 원격에 push하지 않습니다.**
-- 원본 PDF(`books-pdf/`), 다시 만들 수 있는 `_work/{pages,layout,draft,final}`, 동기화 파일(`*.tgz`)은 `.gitignore`로 뺐습니다.
+- 책에서 나온 것은 올리지 않습니다: `books-pdf/`(원본 PDF), `books/`(책별 산출물), 실험의 쪽 이미지·정답·OCR 출력. 모두 `.gitignore`에 들어 있습니다.
+- 올리는 것: 파이프라인 코드(`tools/`), 규약(`references/`), OCR 모델(`models/`), 플러그인 소스(`plugin/`), 캡처 도구(`capture/`), 실험 스크립트와 점수.
+- 플러그인 빌드: `bash plugin/build.sh` 실행 후 `plugin/dist/book-companion.plugin`
 
 ## 파이프라인
 

@@ -1,16 +1,20 @@
 # 원본 PDF (용량 큼, 저작물)
 books-pdf/
-# 다시 만들 수 있는 기계 산출물
-books/*/_work/pages/
-books/*/_work/layout/
-books/*/_work/draft/
-books/*/_work/final/
+*.pdf
+# 책별 산출물 (원문 텍스트·도표 이미지·요약 = 저작물 파생물)
+books/
+# 실험 데이터 (쪽 이미지·정답·OCR 출력에 책 원문이 들어 있음)
+experiments/ocr-bakeoff/pages/
+experiments/ocr-bakeoff/ground_truth/
+experiments/ocr-bakeoff/outputs/
+experiments/pilot-eval/audit/
 # 동기화·전송 임시 파일
 *.tgz
 _xfer/
 _gittest/
 # 빌드 산출물
 plugin/*.plugin
+plugin/dist/
 # 캡처 도구의 로컬 산출물
 capture/eBookToPdf/dist/
 capture/eBookToPdf/pdf_images/
