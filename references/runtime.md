@@ -101,6 +101,7 @@ exit 1이면 출력된 안내문을 사용자에게 그대로 전하고 **아무
 | 3 research | /bookc-3-research | 1 |
 | 4 read | /bookc-4-read | 2, 3 |
 | 5 synthesize | /bookc-5-synthesize | 4 |
+| 6 insight | /bookc-6-insight | 5 |
 
 ## 7. 진행 현황 기록 (progress.html)
 
@@ -110,7 +111,7 @@ exit 1이면 출력된 안내문을 사용자에게 그대로 전하고 **아무
 ```bash
 export BOOKC_PROGRESS_COPY_DIR=/mnt/user-data/outputs/progress   # 방식 A: 매번 새 이름의 사본을 만들고 그 경로를 마지막 줄에 출력
 $BC log $B run-start run=bookc                 # 스킬 이름 (bookc, bookc-2-parse …)
-$BC log $B stage-start stage=parse             # 단계 스킬만. stage: intake|parse|research|study|read|synthesize
+$BC log $B stage-start stage=parse             # 단계 스킬만. stage: intake|parse|research|study|read|synthesize|insight
 $BC log $B wave-start wave=3                   # /bookc 파동만
 $BC log $B task-start task=parse:04a kind=parse chapter=04 pages=20 lane=1 label=04a
 $BC log $B task-end task=parse:04a status=ok   # 실패: status=fail note=이유

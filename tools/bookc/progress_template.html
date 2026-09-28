@@ -64,6 +64,24 @@ select{font:inherit;padding:3px 6px;border-radius:6px;border:1px solid var(--bor
 .running-bar{animation:soft 1.8s ease-in-out infinite}
 @keyframes soft{50%{opacity:.6}}
 details summary{cursor:pointer;color:var(--text-secondary)}
+
+.tabs{display:flex;gap:6px;margin-top:12px;border-bottom:1px solid var(--grid)}
+.tabs button{font:inherit;background:none;border:none;border-bottom:2px solid transparent;padding:8px 12px;color:var(--text-secondary);cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--text-primary);border-bottom-color:var(--seq);font-weight:600}
+.pane[hidden]{display:none}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.icard{background:var(--surface-1);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.icard h3{font-size:14px;margin:0 0 6px;display:flex;gap:8px;align-items:baseline}
+.icard h3 .id{color:var(--muted);font-variant-numeric:tabular-nums;font-weight:600}
+.icard p{margin:4px 0}.icard ul{margin:4px 0;padding-left:18px}
+.icard.flash{outline:2px solid var(--seq)}
+.anc{display:inline-block;font-size:11px;padding:0 5px;border-radius:4px;border:1px solid var(--border);color:var(--text-secondary);cursor:help;font-variant-numeric:tabular-nums}
+.chip{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;margin-right:4px}
+.str{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary)}
+.str i{display:inline-block;height:8px;border-radius:4px}
+.meta{font-size:12px;color:var(--muted);margin-bottom:4px}
+.viz-root{--st-hi:#184f95;--st-mid:#3987e5;--st-lo:#86b6ef}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) .viz-root{--st-hi:#b7d3f6;--st-mid:#5598e7;--st-lo:#256abf}}
 </style>
 </head>
 <body>
@@ -79,6 +97,23 @@ details summary{cursor:pointer;color:var(--text-secondary)}
     </div>
   </div>
 
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-prog" aria-selected="true" aria-controls="pane-prog">진행 현황</button>
+    <button role="tab" id="tab-ins" aria-selected="false" aria-controls="pane-ins">책 인사이트</button>
+  </div>
+  <div class="pane" id="pane-ins" hidden>
+    <div id="insEmpty" class="card muted"></div>
+    <div id="insBody" hidden>
+      <div class="card"><h2>한 장 요약</h2><div id="bottom"></div></div>
+      <div class="card"><h2>주장별 반박 강도</h2>
+        <div class="legend"><span><i style="background:var(--st-hi)"></i>강</span><span><i style="background:var(--st-mid)"></i>중</span><span><i style="background:var(--st-lo)"></i>약</span></div>
+        <div id="rebChart"></div><div class="sub" id="rebNote"></div></div>
+      <div class="card"><h2>핵심 주장 <span class="sub" id="nClaims"></span></h2><div class="cards" id="claims"></div></div>
+      <div class="card"><h2>인사이트 <span class="sub" id="nIns"></span></h2><div class="cards" id="insights"></div></div>
+      <div class="card"><h2>반박해 볼 지점 <span class="sub" id="nReb"></span></h2><div class="cards" id="rebuttals"></div></div>
+    </div>
+  </div>
+  <div class="pane" id="pane-prog">
   <div class="tiles" id="tiles"></div>
 
   <div class="card">
@@ -123,6 +158,7 @@ details summary{cursor:pointer;color:var(--text-secondary)}
     <details><summary><h2 style="display:inline">이벤트 로그</h2></summary>
       <div style="overflow-x:auto;margin-top:8px"><table id="events"></table></div>
     </details>
+  </div>
   </div>
   <div id="tip"></div>
 </div>
@@ -175,7 +211,7 @@ function scope(){if(sel.value==='all')return {runs, tasks:runs.flatMap(r=>Object
 $('title').textContent = `『${D.title}』 진행 현황`;
 $('subtitle').textContent = `마지막 갱신 ${dt(T(D.generated))}` + (D.active?' · 실행 중에는 20초마다 새로 고침':'');
 const stEl=$('state'); if(isLive(lastRun)){stEl.classList.add('live');stEl.lastChild.textContent=`실행 중 · ${lastRun.name}${lastRun.stage?' · '+(D.stageLabel[lastRun.stage]||lastRun.stage):''}`}
-else{stEl.querySelector('.dot').style.background=css('--muted');stEl.lastChild.textContent= lastRun?`멈춤 · 마지막 실행 ${lastRun.status||'중단'}`:'실행 기록 없음'}
+else{stEl.querySelector('.dot').style.background=css('--muted');stEl.lastChild.textContent= lastRun?`${lastRun.status==='done'?'완료':'멈춤'} · 마지막 실행 ${lastRun.name} ${({done:'완료',stopped:'중단',failed:'실패'})[lastRun.status]||'중단됨'}`:'실행 기록 없음'}
 
 const tip=$('tip');
 function showTip(ev, rows){tip.innerHTML='';for(const [strong,label] of rows){const d=h('div',{},tip);if(strong!=null)h('b',{},d,strong);if(label)h('span',{class:'l'},d,(strong!=null?' ':'')+label)}
@@ -330,9 +366,47 @@ function renderTables(){const S=scope();
     const {ts,event,run_id,...rest}=e;h('td',{class:'muted'},r,Object.entries(rest).map(([k,v])=>`${k}=${v}`).join('  '))});
 }
 
+// ---- 책 인사이트 ----
+const STR={강:['강','--st-hi'],중:['중','--st-mid'],약:['약','--st-lo']};
+function setHTML(node, trusted){node.innerHTML=trusted}  // 서버에서 이스케이프한 HTML만 넣는다
+function wireAnchors(root){root.querySelectorAll('.anc').forEach(a=>{const k=a.dataset.anc.slice(0,4),pg=D.pages[k];
+  if(pg)hover(a,()=>[[`인쇄 ${pg.print}쪽`,a.dataset.anc],[null,pg.ch]])})}
+function flash(id){const c=document.getElementById('card-'+id);if(!c)return;c.scrollIntoView({behavior:'smooth',block:'center'});c.classList.add('flash');setTimeout(()=>c.classList.remove('flash'),1400)}
+function renderInsights(){const I=D.insights;
+  if(!I||!(I.claims.length||I.insights.length||I.rebuttals.length)){$('insEmpty').textContent='아직 6단계(인사이트)가 끝나지 않았습니다. /bookc-6-insight 를 실행하면 여기에 핵심 주장·인사이트·반박 지점이 나옵니다.';$('insBody').hidden=true;return}
+  $('insEmpty').hidden=true;$('insBody').hidden=false;
+  setHTML($('bottom'),I.bottom);wireAnchors($('bottom'));
+  const byClaim={};I.claims.forEach(c=>byClaim[c.id]={c,reb:[]});I.rebuttals.forEach(r=>r.target.forEach(t=>{if(byClaim[t])byClaim[t].reb.push(r)}));
+  // 카드
+  const card=(box,it,extra)=>{const d=h('div',{class:'icard',id:'card-'+it.id},box);const hh=h('h3',{},d);h('span',{class:'id'},hh,it.id);hh.appendChild(document.createTextNode(it.title));
+    if(extra)extra(d);const b=h('div',{},d);setHTML(b,it.html);wireAnchors(b);return d};
+  const cl=$('claims');cl.innerHTML='';$('nClaims').textContent=`${I.claims.length}개`;
+  I.claims.forEach(c=>card(cl,c,d=>{const n=byClaim[c.id].reb;if(n.length){const m=h('div',{class:'meta'},d,'반박: ');n.forEach(r=>{const ch=h('span',{class:'chip'},m,`${r.id} ${STR[r.strength]?.[0]||''}`);ch.onclick=()=>flash(r.id)})}}));
+  const ins=$('insights');ins.innerHTML='';$('nIns').textContent=`${I.insights.length}개`;I.insights.forEach(i=>card(ins,i));
+  const rb=$('rebuttals');rb.innerHTML='';$('nReb').textContent=`${I.rebuttals.length}개`;
+  I.rebuttals.forEach(r=>card(rb,r,d=>{const m=h('div',{class:'meta'},d);const st=STR[r.strength];
+    if(st){const s_=h('span',{class:'str'},m);h('i',{style:`width:${{강:36,중:24,약:12}[r.strength]}px;background:var(${st[1]})`},s_);s_.appendChild(document.createTextNode(`강도 ${st[0]}`))}
+    if(r.type)m.appendChild(document.createTextNode(`  ·  ${r.type}  ·  `));r.target.forEach(t=>{const ch=h('span',{class:'chip'},m,t);ch.onclick=()=>flash(t)})}));
+  // 차트: 주장별 반박 수(강·중·약 누적 막대)
+  const box=$('rebChart');box.innerHTML='';const rows=I.claims.map(c=>({c,n:{강:0,중:0,약:0},list:byClaim[c.id].reb}));rows.forEach(r=>r.list.forEach(x=>{if(r.n[x.strength]!=null)r.n[x.strength]++}));
+  const max=Math.max(1,...rows.map(r=>r.n.강+r.n.중+r.n.약)),W=Math.max(420,box.clientWidth||800),lab=Math.min(360,W*0.42),rh=28,bw=W-lab-60;
+  const svg=el('svg',{width:W,height:rows.length*rh+6,role:'img','aria-label':'주장별 반박 강도'},box);
+  rows.forEach((r,i)=>{const y=i*rh+4;const title=`${r.c.id} ${r.c.title}`;const t=el('text',{x:0,y:y+15,fill:css('--text-primary'),'font-size':12},svg,title.length>34?title.slice(0,33)+'…':title);
+    let x=lab;['강','중','약'].forEach(k=>{const w=r.n[k]/max*bw;if(w>0){el('rect',{x:x,y:y+5,width:Math.max(2,w-2),height:14,rx:3,fill:css(STR[k][1])},svg);x+=w}});
+    const tot=r.n.강+r.n.중+r.n.약;el('text',{x:x+6,y:y+16,fill:css('--text-secondary'),'font-size':12},svg,tot?`${tot}`:'반박 없음');
+    const hit=el('rect',{x:0,y:y,width:W,height:rh,fill:'transparent'},svg);hit.style.cursor='pointer';hit.addEventListener('click',()=>flash(r.c.id));
+    hover(hit,()=>[[`${tot}개`,`${r.c.id} ${r.c.title}`],...r.list.map(x=>[null,`${x.id} [${x.strength}] ${x.title}`])])});
+  const strong=I.rebuttals.filter(r=>r.strength==='강').length;
+  $('rebNote').textContent=`반박 ${I.rebuttals.length}개 중 강 ${strong}개 · 막대나 칩을 누르면 해당 카드로 이동합니다`;
+}
+function showTab(which){const ins=which==='ins';$('tab-ins').setAttribute('aria-selected',ins);$('tab-prog').setAttribute('aria-selected',!ins);
+  $('pane-ins').hidden=!ins;$('pane-prog').hidden=ins;if(history.replaceState)history.replaceState(null,'',ins?'#insights':'#progress');if(ins)renderInsights();else renderAll()}
+$('tab-ins').onclick=()=>showTab('ins');$('tab-prog').onclick=()=>showTab('prog');
+
 function renderAll(){renderTiles();renderStages();renderGantt();renderLines();renderRunning();renderGrid();renderTables()}
-renderAll();
-addEventListener('resize',()=>{clearTimeout(window._rz);window._rz=setTimeout(renderAll,150)});
+const hasIns=D.insights&&D.insights.claims&&D.insights.claims.length;
+showTab(location.hash==='#insights'||(location.hash!=='#progress'&&hasIns&&!isLive(lastRun))?'ins':'prog');
+addEventListener('resize',()=>{clearTimeout(window._rz);window._rz=setTimeout(()=>{if($('pane-ins').hidden)renderAll();else renderInsights()},150)});
 // 실행 중이면 경과 시간은 1초마다, 타임라인은 10초마다 갱신
 if(isLive(lastRun)){
   setInterval(()=>{document.querySelectorAll('[data-since]').forEach(c=>c.textContent=dur(NOW()-(+c.dataset.since)));

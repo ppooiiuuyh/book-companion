@@ -26,7 +26,7 @@ description: book-companion 5단계. 장 요약·통독 메모·외부 조사를
    - `## 강점과 한계`, `## 지금 읽을 때 주의할 점`(시대·지역 맥락, 데이터 시점)
    - `## 함께 이야기해 볼 질문` 5–8개
 4. `$BC lint $B` (전 장) 재확인. errors가 있으면 보고하고 고친다.
-5. `$BC mark $B synthesize` → 체크포인트 → `$BC status $B`와 L0 요약 3문장, 사용 방법(`/bookc-open <책>`)을 보고한다.
+5. `$BC mark $B synthesize` → 체크포인트 → `$BC status $B`와 L0 요약 3문장, 다음 단계(`/bookc-6-insight <책>`)를 안내한다.
 
 ## 진행 현황 기록 (runtime.md 7절)
 

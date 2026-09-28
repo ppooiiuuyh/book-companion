@@ -12,6 +12,7 @@
 | `/bookc-3-research <책>` | 서점·블로그·기사·원서 반응 4개 영역을 병렬 조사한 뒤 병합 | 1 |
 | `/bookc-4-read <책>` | 1차: 장별 요약·도표 읽기(병렬), 2차: 앞에서부터 통독 메모(순차) | 2, 3 |
 | `/bookc-5-synthesize <책>` | 책 요약(index.md)과 외부 평가 대조(synthesis.md) | 4 |
+| `/bookc-6-insight <책>` | 핵심 주장·인사이트·반박 지점(insights.md), 진행 현황 페이지의 '책 인사이트' 탭 | 5 |
 | `/bookc-status [책]` | 진행 상태 | – |
 | `/bookc-open <책>` | 만든 지식 베이스로 대화 | 2 일부 |
 
@@ -27,12 +28,13 @@ PDF가 없는 전자책은 먼저 `~/project/book-companion/capture/eBookToPdf`�
 └── books/<책>/
     ├── index.md          입구: L0 요약·목차·핵심 개념 (5단계)
     ├── synthesis.md      독해 ↔ 외부 평가 대조 (5단계)
+    ├── insights.md       핵심 주장·인사이트·반박 지점 (6단계)
     ├── glossary.md
     ├── NN_장/source.md   원문 (+ img/)       (2단계)
     ├── NN_장/study.md    L1·L2 요약          (4단계)
     ├── reading/          통독 메모, _carry.md (4단계)
     ├── research/         sources·highlights·critiques·watchlist, _parts/(영역별 원자료) (3단계)
-    ├── progress.html     진행 현황 대시보드(단계·경과 시간·진행률·병렬 타임라인). 실행 중 20초마다 새로 고침
+    ├── progress.html     진행 현황 대시보드(단계·경과 시간·진행률·병렬 타임라인) + '책 인사이트' 탭. 실행 중 20초마다 새로 고침
     └── _work/            manifest(진행 상태), OCR, 교정 기록, runlog.jsonl(실행 기록)
 ```
 

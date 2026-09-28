@@ -9,9 +9,10 @@ from pathlib import Path
 from .common import Book, pid
 
 # 전체 진행률 가중치(작업량 비례 추정)
-WEIGHTS = {"intake": 5, "parse": 50, "research": 10, "study": 15, "read": 15, "synthesize": 5}
+WEIGHTS = {"intake": 5, "parse": 48, "research": 10, "study": 14, "read": 14, "synthesize": 4, "insight": 5}
 STAGE_LABEL = {"intake": "1 인테이크", "parse": "2 파싱", "research": "3 조사",
-               "study": "4a 통독 1차(요약)", "read": "4b 통독 2차(메모)", "synthesize": "5 종합"}
+               "study": "4a 통독 1차(요약)", "read": "4b 통독 2차(메모)", "synthesize": "5 종합",
+               "insight": "6 인사이트(핵심·반박)"}
 
 
 def now_iso() -> str:
@@ -64,6 +65,8 @@ def metrics(book: Book) -> dict:
                  "text": f"{len([c for c in body if c in rd.get('chapters_done', [])])}/{len(body)}장"},
         "synthesize": {"done": pr["synthesize"]["done"], "value": 1.0 if pr["synthesize"]["done"] else 0.0,
                        "text": pr["synthesize"]["detail"]},
+        "insight": {"done": pr["insight"]["done"], "value": 1.0 if pr["insight"]["done"] else (0.5 if (book.root / "insights.md").exists() else 0.0),
+                    "text": pr["insight"]["detail"]},
     }
     for v in s.values():
         if v["done"]:
@@ -87,6 +90,80 @@ def chapter_grid(book: Book) -> list[dict]:
                      "assembled": v["assembled"], "study": c["id"] in rd.get("study_done", []),
                      "read": c["id"] in rd.get("chapters_done", [])})
     return rows
+
+
+def _inline(t: str) -> str:
+    """아주 작은 Markdown 인라인 변환(이스케이프 후 굵게·코드·링크·앵커 칩)."""
+    import re
+    t = html.escape(t, quote=False)
+    t = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", t)
+    t = re.sub(r"`([^`]+)`", r"<code>\1</code>", t)
+    t = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", lambda m: f'<a href="{html.escape(m.group(2))}">{m.group(1)}</a>', t)
+    t = re.sub(r"\b(p\d{3}(?:-b\d+)?)\b", r'<span class="anc" data-anc="\1">\1</span>', t)
+    return t
+
+
+def _md_block(lines: list[str]) -> str:
+    out, ul = [], False
+    for ln in lines:
+        if not ln.strip():
+            if ul: out.append("</ul>"); ul = False
+            continue
+        if ln.lstrip().startswith(("- ", "* ")):
+            if not ul: out.append("<ul>"); ul = True
+            out.append(f"<li>{_inline(ln.lstrip()[2:])}</li>")
+        else:
+            if ul: out.append("</ul>"); ul = False
+            out.append(f"<p>{_inline(ln.strip())}</p>")
+    if ul: out.append("</ul>")
+    return "".join(out)
+
+
+def parse_insights(book: Book) -> dict | None:
+    """insights.md → {bottom, claims, insights, rebuttals}. 형식은 skills/bookc-6-insight/SKILL.md 참고."""
+    import re
+    p = book.root / "insights.md"
+    if not p.exists():
+        return None
+    text = re.sub(r"^---.*?---\s*", "", p.read_text(), flags=re.S)
+    sections, cur = {}, None
+    for ln in text.splitlines():
+        m = re.match(r"^##\s+(.+?)\s*$", ln)
+        if m:
+            cur = m.group(1); sections[cur] = []; continue
+        if cur: sections[cur].append(ln)
+    def items(name):
+        key = next((k for k in sections if k.startswith(name)), None)
+        if not key: return []
+        res, it = [], None
+        for ln in sections[key]:
+            m = re.match(r"^###\s+([A-Z]\d+)\.?\s*(.*)$", ln)
+            if m:
+                it = {"id": m.group(1), "title": m.group(2).strip(), "lines": []}; res.append(it); continue
+            if it is not None: it["lines"].append(ln)
+        for it in res:
+            fields = {}
+            for ln in it["lines"]:
+                fm = re.match(r"^-\s*(대상|강도|유형)\s*:\s*(.+)$", ln.strip())
+                if fm: fields[fm.group(1)] = fm.group(2).strip()
+            it["target"] = re.findall(r"K\d+", fields.get("대상", ""))
+            it["strength"] = fields.get("강도", "").strip()[:1]
+            it["type"] = fields.get("유형", "")
+            it["html"] = _md_block([ln for ln in it["lines"] if not re.match(r"^-\s*(대상|강도|유형)\s*:", ln.strip())])
+            del it["lines"]
+        return res
+    bottom_key = next((k for k in sections if k.startswith("한 장 요약")), None)
+    return {"bottom": _md_block(sections[bottom_key]) if bottom_key else "",
+            "claims": items("핵심 주장"), "insights": items("인사이트"), "rebuttals": items("반박")}
+
+
+def page_map(book: Book) -> dict:
+    off = book.manifest.get("printed_page_offset") or 0
+    m = {}
+    for c in book.manifest.get("chapters", []):
+        for p in range(c["pages"][0], c["pages"][1] + 1):
+            m[pid(p)] = {"ch": f"{c['label']} {c['title']}" if c["title"] != c["label"] else c["label"], "print": p + off, "slug": c["slug"]}
+    return m
 
 
 def log(book: Book, event: str, **kw) -> dict:
@@ -123,6 +200,8 @@ def render(book: Book) -> Path:
         "stageLabel": STAGE_LABEL,
         "weights": WEIGHTS,
         "active": bool(book.manifest.get("status", {}).get("current_run")) if book.manifest_path.exists() else False,
+        "insights": parse_insights(book) if book.manifest_path.exists() else None,
+        "pages": page_map(book) if book.manifest_path.exists() else {},
     }
     tpl = (Path(__file__).parent / "progress_template.html").read_text()
     out = tpl.replace("__TITLE__", html.escape(data["title"])) \
