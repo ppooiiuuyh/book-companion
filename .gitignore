@@ -25,3 +25,6 @@ __pycache__/
 .DS_Store
 .venv/
 capture/eBookToPdf/_captures/
+# 서점 리뷰 표본(타인 리뷰 발췌 포함) — 로컬 보관
+experiments/review-study/sample.jsonl
+experiments/review-study/code.py
