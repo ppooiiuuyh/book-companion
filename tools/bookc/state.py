@@ -11,6 +11,7 @@ STAGES = {
     "read":       {"no": 4, "name": "통독(메모·장/절 요약)", "requires": ["parse", "research"]},
     "synthesize": {"no": 5, "name": "종합(대조·index)", "requires": ["read"]},
     "insight":    {"no": 6, "name": "인사이트(핵심·반박 정리)", "requires": ["synthesize"]},
+    "review":     {"no": 7, "name": "리뷰(서점·비평·기록)", "requires": ["insight"]},
 }
 # 동기화에서 제외할 것(다시 만들 수 있는 것)
 REGEN = {"pages", "layout", "draft", "final"}
@@ -58,6 +59,10 @@ def progress(book: Book) -> dict:
     ins = st.get("insight", {})
     out["insight"] = {"done": bool(ins.get("done")),
                       "detail": "완료" if ins.get("done") else ("insights.md 있음(미확정)" if (book.root / "insights.md").exists() else "미완료")}
+    rv = st.get("review", {})
+    rvd = book.root / "reviews"
+    have = [k for k in ("store", "critical", "log") if (rvd / f"{k}.md").exists()]
+    out["review"] = {"done": bool(rv.get("done")), "detail": ("완료 · " if rv.get("done") else "") + (f"{len(have)}/3편" if have else "미완료")}
     return out
 
 

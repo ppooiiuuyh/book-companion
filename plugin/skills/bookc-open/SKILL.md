@@ -10,7 +10,7 @@ description: book-companion으로 만든 책 지식 베이스를 열어 그 책�
 ## 열기
 
 1. 책을 찾는다(runtime.md 3절). 방식 A에서는 **내려받기 없이** 기기에서 직접 읽는다: 텍스트 파일은 `device_bash`로 `cat`/`grep`, 도표 이미지를 봐야 할 때만 그 파일을 스테이징해서 Read한다.
-2. 처음에 읽을 것(이 순서, 있는 것만): `index.md` → `insights.md`(있으면) → `glossary.md` → `reading/_carry.md`. 합쳐 약 1만 토큰 이내. 원문 전체를 미리 읽지 않는다.
+2. 처음에 읽을 것(이 순서, 있는 것만): `index.md` → `insights.md`(있으면) → `my_stance.json`(있으면: 사용자의 동의·반대) → `glossary.md` → `reading/_carry.md`. 합쳐 약 1만 토큰 이내. 원문 전체를 미리 읽지 않는다.
 3. 사용자에게 한두 줄로: 책 제목, 준비된 층, 무엇을 물어볼 수 있는지.
 
 ## 답하기

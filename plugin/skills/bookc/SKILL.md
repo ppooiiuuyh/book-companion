@@ -1,6 +1,6 @@
 ---
 name: bookc
-description: book-companion 전체 실행. 스캔 책 PDF 하나를 인테이크 → 파싱 → 조사 → 통독 → 종합 → 인사이트까지 끝까지 처리해 Claude와 같이 읽는 지식 베이스로 만든다. 파싱·조사·통독을 장 단위로 겹쳐 병렬 실행하고, 중간에 끊겼으면 마지막으로 끝난 곳부터 이어 간다. "/bookc [pdf 경로 또는 books-pdf 안의 파일명]", "이 책 전부 처리해줘", "책 작업 이어서 해줘"에 쓴다.
+description: book-companion 전체 실행. 스캔 책 PDF 하나를 인테이크 → 파싱 → 조사 → 통독 → 종합 → 인사이트 → 리뷰까지 끝까지 처리해 Claude와 같이 읽는 지식 베이스로 만든다. 파싱·조사·통독을 장 단위로 겹쳐 병렬 실행하고, 중간에 끊겼으면 마지막으로 끝난 곳부터 이어 간다. "/bookc [pdf 경로 또는 books-pdf 안의 파일명]", "이 책 전부 처리해줘", "책 작업 이어서 해줘"에 쓴다.
 ---
 
 # 전체 실행 (/bookc)
@@ -45,13 +45,14 @@ description: book-companion 전체 실행. 스캔 책 PDF 하나를 인테이크
   1. `wave-start wave=N`, 이어서 작업자마다 `task-start`를 기록한다(`lane`=1…4, `label`=장 id 또는 조사 영역, parse면 `pages`=맡긴 쪽 수). 그다음 progress.html을 보내고 Agent를 띄운다.
   2. Agent가 돌아오면 작업마다 `task-end status=ok|fail`을 기록한다.
   3. 직접 하는 후처리(조립·lint, 조사 병합)도 `kind=other` task로 짧게 기록한다. 끝나면 `wave-end`, 체크포인트, progress.html 보내기 순서로 마친다.
-- **감사·종합·인사이트**: 감사자는 `kind=other label=감사 NN`으로, 종합은 `kind=other label=종합`으로, 인사이트는 `kind=other label=인사이트`로 기록한다(각각 `stage-start stage=synthesize|insight`로 감싼다).
+- **감사·종합·인사이트**: 감사자는 `kind=other label=감사 NN`으로, 종합은 `kind=other label=종합`으로, 인사이트는 `kind=other label=인사이트`로, 리뷰는 `kind=other label=리뷰 store|critical|log`로 기록한다(각각 `stage-start stage=synthesize|insight|review`로 감싼다).
 - **끝**: `run-end status=done`을 기록하고 progress.html을 보낸다. 4절 사유로 멈추면 `run-end status=stopped note=사유`를 기록한다.
 ## 3. 마무리
 
 1. `$BC can $B synthesize`가 통과하면 `PLUGIN/skills/bookc-5-synthesize/SKILL.md`의 절차를 수행한다.
-2. 이어서 `PLUGIN/skills/bookc-6-insight/SKILL.md`의 절차를 수행한다(핵심 주장·인사이트·반박 지점 → insights.md, 진행 현황 페이지의 '책 인사이트' 탭).
-3. `$BC status $B`, insights.md의 한 장 요약, 결과 폴더 위치(사용자 기기의 `project/book-companion/books/<slug>/`)를 알린다. 이어서 `/bookc-open <책>`으로 대화를 시작할 수 있다고 안내한다.
+2. 이어서 `PLUGIN/skills/bookc-6-insight/SKILL.md`의 절차를 수행한다(한 줄 요약·핵심 주장·인사이트·반박 → insights.md).
+3. 이어서 `PLUGIN/skills/bookc-7-review/SKILL.md`의 절차를 수행한다(서점 리뷰·비평형 서평·독서 기록 → reviews/). 사용자 관점을 묻는 질문은 이 시점에 한 번만 한다.
+4. `$BC status $B`, insights.md의 한 줄 요약, 결과 폴더 위치(사용자 기기의 `project/book-companion/books/<slug>/`)를 알린다. 이어서 `/bookc-open <책>`으로 대화를 시작할 수 있다고 안내한다.
 
 ## 4. 멈춰야 할 때
 

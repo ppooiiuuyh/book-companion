@@ -9,10 +9,10 @@ from pathlib import Path
 from .common import Book, pid
 
 # 전체 진행률 가중치(작업량 비례 추정)
-WEIGHTS = {"intake": 5, "parse": 48, "research": 10, "study": 14, "read": 14, "synthesize": 4, "insight": 5}
+WEIGHTS = {"intake": 5, "parse": 46, "research": 10, "study": 14, "read": 14, "synthesize": 4, "insight": 4, "review": 3}
 STAGE_LABEL = {"intake": "1 인테이크", "parse": "2 파싱", "research": "3 조사",
                "study": "4a 통독 1차(요약)", "read": "4b 통독 2차(메모)", "synthesize": "5 종합",
-               "insight": "6 인사이트(핵심·반박)"}
+               "insight": "6 인사이트(핵심·반박)", "review": "7 리뷰"}
 
 
 def now_iso() -> str:
@@ -67,6 +67,8 @@ def metrics(book: Book) -> dict:
                        "text": pr["synthesize"]["detail"]},
         "insight": {"done": pr["insight"]["done"], "value": 1.0 if pr["insight"]["done"] else (0.5 if (book.root / "insights.md").exists() else 0.0),
                     "text": pr["insight"]["detail"]},
+        "review": {"done": pr["review"]["done"], "value": 1.0 if pr["review"]["done"] else (0.5 if (book.root / "reviews").exists() else 0.0),
+                   "text": pr["review"]["detail"]},
     }
     for v in s.values():
         if v["done"]:
@@ -153,7 +155,9 @@ def parse_insights(book: Book) -> dict | None:
             del it["lines"]
         return res
     bottom_key = next((k for k in sections if k.startswith("한 장 요약")), None)
-    return {"bottom": _md_block(sections[bottom_key]) if bottom_key else "",
+    one_key = next((k for k in sections if k.startswith("한 줄 요약")), None)
+    return {"oneline": _md_block(sections[one_key]) if one_key else "",
+            "bottom": _md_block(sections[bottom_key]) if bottom_key else "",
             "claims": items("핵심 주장"), "insights": items("인사이트"), "rebuttals": items("반박")}
 
 
@@ -200,10 +204,12 @@ def render(book: Book) -> Path:
         "stageLabel": STAGE_LABEL,
         "weights": WEIGHTS,
         "active": bool(book.manifest.get("status", {}).get("current_run")) if book.manifest_path.exists() else False,
-        "insights": parse_insights(book) if book.manifest_path.exists() else None,
+        "insights": (ins := parse_insights(book) if book.manifest_path.exists() else None),
+        "book": (__import__("bookc.viewer", fromlist=["collect"]).collect(book, ins) if book.manifest_path.exists() else None),
         "pages": page_map(book) if book.manifest_path.exists() else {},
     }
     tpl = (Path(__file__).parent / "progress_template.html").read_text()
+    tpl = tpl.replace("/*__BOOKJS_FILE__*/", (Path(__file__).parent / "progress_book.js").read_text())
     out = tpl.replace("__TITLE__", html.escape(data["title"])) \
              .replace("__REFRESH__", '<meta http-equiv="refresh" content="20">' if data["active"] else "") \
              .replace("__DATA__", json.dumps(data, ensure_ascii=False).replace("</", "<\\/"))

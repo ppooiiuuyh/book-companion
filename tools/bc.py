@@ -19,7 +19,7 @@
   bc.py next      <book>                 다음 단계 이름
   bc.py todo      <book> parse|read      남은 장·쪽
   bc.py ready     <book>                 지금 시작할 수 있는 작업(우선순위 순, JSON 줄)
-  bc.py mark      <book> <stage> [--chapters ..] [--files ..] [--undo]   stage: intake|parse|research|study|read|synthesize|insight
+  bc.py mark      <book> <stage> [--chapters ..] [--files ..] [--undo]   stage: intake|parse|research|study|read|synthesize|insight|review
   bc.py set       <book> key.path=JSON값 ...
   bc.py chapter   <book> add|edit|del <id> [label=.. title=.. pages=216-218 title_pages=216,217 back=1]
 기록·대시보드
@@ -170,7 +170,7 @@ def main():
             for c in chs:
                 if a.undo and c in d: d.remove(c)
                 elif not a.undo and c not in d: d.append(c)
-        elif stage in ("research", "synthesize", "insight"):
+        elif stage in ("research", "synthesize", "insight", "review"):
             st["done"] = not a.undo
             if a.files: st["files"] = a.files.split(",")
         book.save()
