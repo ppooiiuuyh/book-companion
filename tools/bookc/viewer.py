@@ -39,10 +39,14 @@ def source_blocks(book: Book) -> dict:
         if not p.exists():
             continue
         text = re.sub(r"^---.*?---\s*", "", p.read_text(), flags=re.S)
+        # 소제목·도표 제목·목록 항목처럼 앵커가 줄 끝에 붙은 줄은 앵커를 줄 앞으로 옮긴다
+        text = re.sub(r"^(.+?)\s*<!-- (?:§[\d.]+ )?(p\d{3}-b\d+) -->\s*$", r"<!-- \2 -->\1", text, flags=re.M)
         parts = ANC.split(text)
         # parts: [앞부분, id1, 본문1, id2, 본문2, ...]
         for k in range(1, len(parts), 2):
             bid, body = parts[k], parts[k + 1]
+            b0 = body.lstrip()
+            kind = "h2" if b0.startswith("## ") else "h3" if b0.startswith("### ") else "fig" if b0.startswith("> **") else "p"
             body = re.sub(r"<!--.*?-->", "", body)
             body = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", body)
             lines = [l.strip().lstrip(">").strip() for l in body.strip().splitlines()]
@@ -50,9 +54,10 @@ def source_blocks(book: Book) -> dict:
             t = " ".join(lines)
             t = re.sub(r"\*\[판독\].*", "", t).strip()
             t = re.sub(r"^#+\s*", "", t)
+            t = re.sub(r"^\*\*(.+?)\*\*", r"\1", t)
             if len(t) > 1400:
                 t = t[:1400] + " …"
-            blocks[bid] = [i, t]
+            blocks[bid] = [i, t, kind]
             order.append(bid)
     return {"blocks": blocks, "order": order, "chapters": chs}
 

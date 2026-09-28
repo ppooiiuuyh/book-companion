@@ -6,25 +6,69 @@ const setHTML = (node, trusted) => { node.innerHTML = trusted || ''; };  // 서�
 const SRC = (BK.src || {blocks: {}, order: [], chapters: []});
 const printOf = a => { const pg = D.pages[a.slice(0, 4)]; return pg ? pg.print : null; };
 
-// 원문 서랍
+// 원문 서랍 + 목차 리모콘
 let curAnc = null;
+const FIGIMG = Object.fromEntries((BK.figures || []).map(f => [f.id, f]));
+const chFirst = ci => SRC.order.find(b => SRC.blocks[b][0] === ci);
 function openSrc(anc, extra) {
   let id = anc;
   if (!SRC.blocks[id]) { id = SRC.order.find(b => b.startsWith(anc.slice(0, 4))) || null; }
-  const dr = $('drawer'); dr.hidden = false; curAnc = id;
-  const pg = D.pages[anc.slice(0, 4)];
-  $('dCh').textContent = pg ? `${pg.ch} · 인쇄 ${pg.print}쪽 · ${anc}` : anc;
-  $('dTitle').textContent = extra && extra.title ? extra.title : '원문';
+  const dr = $('drawer'); dr.hidden = false; document.body.classList.add('reading'); curAnc = id;
+  const key = (id || anc), pg = D.pages[key.slice(0, 4)];
+  $('dCh').textContent = pg ? `${pg.ch} · 인쇄 ${pg.print}쪽 · ${key}` : key;
+  const blk = id ? SRC.blocks[id] : null;
+  const fig = extra && extra.img ? extra : (id && FIGIMG[id]) || null;
+  $('dTitle').textContent = fig ? fig.title : blk && blk[2] && blk[2].startsWith('h') ? blk[1] : '원문';
   const body = $('dBody'); body.innerHTML = '';
-  if (extra && extra.img) { const im = h('img', {src: extra.img, alt: extra.title || ''}, body); }
-  if (extra && extra.note) { const p_ = h('p', {}, body); h('b', {}, p_, `판정: ${extra.verdict} — `); p_.appendChild(document.createTextNode(extra.note)); }
-  if (id) { const blk = SRC.blocks[id]; const p_ = h('p', {}, body, blk[1]); if (!extra || !extra.img) h('div', {class: 'sub'}, body, SRC.chapters[blk[0]]?.label || ''); }
+  if (fig && fig.img) h('img', {src: fig.img, alt: fig.title || ''}, body);
+  if (fig && fig.note) { const p_ = h('p', {class: 'verdict'}, body); h('b', {}, p_, `판정: ${fig.verdict} — `); p_.appendChild(document.createTextNode(fig.note)); }
+  if (blk) {  // 현재 문단을 강조하고, 같은 장에서 이어지는 문단 몇 개를 함께 보여 준다
+    const i0 = SRC.order.indexOf(id); let shown = 0;
+    for (let i = i0; i < SRC.order.length && shown < 4; i++) {
+      const bid = SRC.order[i], b2 = SRC.blocks[bid]; if (b2[0] !== blk[0]) break;
+      if (i > i0 && b2[2] === 'h2') break;
+      const cur = i === i0 ? ' cur' : '';
+      const el_ = (b2[2] || '').startsWith('h') ? h('h4', {class: 'srch' + cur}, body, b2[1]) : h('p', {class: 'srcp' + cur}, body, b2[2] === 'fig' ? '▦ ' + b2[1] : b2[1]);
+      if (i > i0) el_.onclick = () => openSrc(bid);
+      if (!(b2[2] || '').startsWith('h')) shown++;
+    }
+  }
   else h('p', {class: 'muted'}, body, '원문 블록을 찾지 못했습니다.');
+  body.scrollTop = 0; $('drawer').querySelector('.dmain').scrollTop = 0;
+  if (id) { const i = SRC.order.indexOf(id); $('dPos').textContent = `${i + 1} / ${SRC.order.length}`; }
+  try { localStorage.setItem(`bookc-last:${BK.slug}`, id || ''); } catch (e) {}
+  renderRemote();
 }
 function stepSrc(d) { if (!curAnc) return; const i = SRC.order.indexOf(curAnc) + d; if (i >= 0 && i < SRC.order.length) openSrc(SRC.order[i]); }
-$('dClose').onclick = () => { $('drawer').hidden = true; };
+function stepKind(d, test) { if (!curAnc) return; let i = SRC.order.indexOf(curAnc) + d; while (i >= 0 && i < SRC.order.length) { if (test(SRC.blocks[SRC.order[i]], SRC.order[i])) { openSrc(SRC.order[i]); return; } i += d; } }
+function stepChapter(d) { if (!curAnc) return; const ci = SRC.blocks[curAnc][0] + d; if (ci < 0 || ci >= SRC.chapters.length) return; const f = chFirst(ci); if (f) openSrc(f); }
+function renderRemote() {
+  const nav = $('remote'); nav.innerHTML = ''; const cur = curAnc ? SRC.blocks[curAnc][0] : -1;
+  h('div', {class: 'rt'}, nav, '목차');
+  SRC.chapters.forEach((c, ci) => {
+    const f = chFirst(ci); if (!f) return;
+    const b_ = h('button', {class: 'rc' + (ci === cur ? ' on' : '')}, nav, c.label.replace(/^제(\d+)장\s*/, '$1장 '));
+    b_.onclick = () => openSrc(f);
+    if (ci === cur) {
+      const secs = SRC.order.filter(b => SRC.blocks[b][0] === ci && SRC.blocks[b][2] === 'h2');
+      const curSecIdx = (() => { let last = -1; const pos = SRC.order.indexOf(curAnc); secs.forEach((s_, k) => { if (SRC.order.indexOf(s_) <= pos) last = k; }); return last; })();
+      secs.forEach((sid, k) => { const sb = h('button', {class: 'rs' + (k === curSecIdx ? ' on' : '')}, nav, SRC.blocks[sid][1]); sb.onclick = () => openSrc(sid); });
+    }
+  });
+  const on = nav.querySelector('.rs.on') || nav.querySelector('.rc.on'); if (on) on.scrollIntoView({block: 'nearest'});
+}
+const closeSrc = () => { $('drawer').hidden = true; document.body.classList.remove('reading'); };
+$('dClose').onclick = closeSrc;
 $('dPrev').onclick = () => stepSrc(-1); $('dNext').onclick = () => stepSrc(1);
-addEventListener('keydown', e => { if (e.key === 'Escape') $('drawer').hidden = true; });
+$('readerBtn').onclick = () => { let last = ''; try { last = localStorage.getItem(`bookc-last:${BK.slug}`) || ''; } catch (e) {} openSrc(SRC.blocks[last] ? last : SRC.order[0]); };
+addEventListener('keydown', e => {
+  if ($('drawer').hidden) return;
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target || {}).tagName || '')) return;
+  const isH = b => (b[2] || '').startsWith('h');
+  const map = {Escape: () => closeSrc(), ArrowRight: () => stepSrc(1), ArrowLeft: () => stepSrc(-1),
+    ArrowDown: () => stepKind(1, isH), ArrowUp: () => stepKind(-1, isH), PageDown: () => stepChapter(1), PageUp: () => stepChapter(-1)};
+  if (map[e.key]) { e.preventDefault(); map[e.key](); }
+});
 function wireAnchors(root) {
   root.querySelectorAll('.anc').forEach(a => {
     const k = a.dataset.anc, pg = D.pages[k.slice(0, 4)];
@@ -75,22 +119,25 @@ function card(box, it, extra, withStance) {
 function goCard(tab, id) { showTab(tab); setTimeout(() => { const c = document.getElementById('card-' + id); if (!c) return; c.scrollIntoView({behavior: 'smooth', block: 'center'}); c.classList.add('flash'); setTimeout(() => c.classList.remove('flash'), 1400); }, 60); }
 const byClaim = {}; INS.claims.forEach(c => byClaim[c.id] = []); INS.rebuttals.forEach(r => r.target.forEach(t => { if (byClaim[t]) byClaim[t].push(r); }));
 
-// 머리 카드: 책 정보
+// 머리 카드: 책 정보 (접기 상태 기억)
 function renderBookcard() {
-  const I = BK.info || {}; const box = $('bookcard'); box.innerHTML = '';
-  const t = h('div', {}, box); h('span', {class: 'bt'}, t, `『${I.title || D.title}』`); if (I.subtitle) h('span', {class: 'bs'}, t, `  ${I.subtitle}`);
+  const I = BK.info || {}; const det = $('bookcard'); const sum = $('bookSum'); const box = $('bookBody'); sum.innerHTML = ''; box.innerHTML = '';
+  h('span', {class: 'bt'}, sum, `『${I.title || D.title}』`); if (I.subtitle) h('span', {class: 'bs'}, sum, I.subtitle);
+  h('span', {class: 'bm'}, sum, [I.author, I.translator && `${I.translator} 옮김`, I.pub_date ? I.pub_date.split('(')[0].trim() : I.year].filter(Boolean).join(' · '));
   const dl = h('dl', {}, box);
   const row = (k, v) => { if (!v) return; const d = h('div', {}, dl); h('dt', {}, d, k); h('dd', {}, d, v); };
   row('지은이 · 옮긴이', [I.author, I.translator && `${I.translator} 옮김`].filter(Boolean).join(' · '));
   row('출판사', [I.publisher, I.imprint && `(${I.imprint})`].filter(Boolean).join(' '));
   row('한국어판 출간', I.pub_date || I.year);
-  row('원서', [I.original_title].filter(Boolean).join(''));
+  row('원서', I.original_title);
   row('원서 출판사 · 출간', [I.original_publisher, I.original_pub_date].filter(Boolean).join(' · '));
-  row('쪽수', [I.pages_printed && `${I.pages_printed}쪽`, I.pdf_pages && `(PDF ${I.pdf_pages}쪽)`].filter(Boolean).join(' '));
+  row('쪽수', [I.pages_printed && `${I.pages_printed}쪽`, I.pdf_pages && `PDF ${I.pdf_pages}쪽`].filter(Boolean).join(' · '));
   row('ISBN', I.isbn);
   row('이전 번역판', Array.isArray(I.prior_editions) ? I.prior_editions.join(' / ') : I.prior_editions);
   row('분야', I.genre);
-  if (I.info_sources) h('div', {class: 'sub', style: 'font-size:11px'}, box, `책 정보 출처: ${I.info_sources}`);
+  if (I.info_sources) h('div', {class: 'sub src-note'}, box, `책 정보 출처: ${I.info_sources}`);
+  let open = true; try { open = localStorage.getItem('bookc-bookcard') !== 'closed'; } catch (e) {}
+  det.open = open; det.addEventListener('toggle', () => { try { localStorage.setItem('bookc-bookcard', det.open ? 'open' : 'closed'); } catch (e) {} });
 }
 
 // 한눈에 보기
@@ -105,7 +152,7 @@ function renderGlance() {
     R.variants.forEach(v => { const b_ = h('button', {'aria-pressed': String(v.key === revKey)}, seg, v.name); b_.onclick = () => { revKey = v.key; renderGlance(); }; });
     const v = R.variants.find(x => x.key === revKey), m = v.meta || {};
     const meta = $('revMeta'); meta.innerHTML = '';
-    if (m.stars) h('b', {}, meta, '★'.repeat(Math.round(m.stars)) + '☆'.repeat(5 - Math.round(m.stars)) + ` ${m.stars}`);
+    if (m.stars) { const f = Math.floor(m.stars), half = m.stars - f >= .5; h('b', {class: 'stars'}, meta, '★'.repeat(f) + (half ? '½' : '') + '☆'.repeat(5 - f - (half ? 1 : 0)) + `  ${m.stars}`); }
     h('span', {class: 'sub'}, meta, `${v.title ? v.title + ' · ' : ''}${v.chars.toLocaleString()}자`);
     if (m.stance_used != null) h('span', {class: 'sub'}, meta, m.stance_used ? '· 내 입장 반영' : '· 내 입장 없이 작성(개인 경험 부분은 빈자리)');
     const ch = $('revChecks'); ch.innerHTML = '';
@@ -114,7 +161,7 @@ function renderGlance() {
   }
   // 장별 흐름
   const fl = $('flow'); fl.innerHTML = '';
-  (BK.flow || []).forEach(f => { const li = h('li', {}, fl); h('b', {}, li, `${f.label}  `); const sp = h('span', {}, li); sp.innerHTML = f.text.replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'})[c]).replace(/\b(p\d{3}(?:-b\d+)?)\b/g, '<span class="anc" data-anc="$1">$1</span>'); wireAnchors(sp); });
+  (BK.flow || []).forEach(f => { const li = h('li', {}, fl); const hd = h('div', {class: 'fh'}, li); h('b', {}, hd, f.label); h('span', {class: 'mins'}, hd, `${Math.max(1, Math.round(f.chars / 500))}분`); const sp = h('span', {class: 'ft'}, li); sp.innerHTML = f.text.replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'})[c]).replace(/\b(p\d{3}(?:-b\d+)?)\b/g, '<span class="anc" data-anc="$1">$1</span>'); wireAnchors(sp); });
   // 핵심 주장
   const cl = $('claims'); cl.innerHTML = ''; $('nClaims').textContent = `${INS.claims.length}개`;
   INS.claims.forEach(c => card(cl, c, d => { const n = byClaim[c.id] || []; if (n.length) { const m = h('div', {class: 'meta'}, d); const ch_ = h('span', {class: 'chip'}, m, `반박 ${n.length}개 보기 →`); ch_.onclick = () => goCard('crit', n[0].id); } }, true));
@@ -187,7 +234,7 @@ function renderCrit() {
 
 // 탭
 const TABS = {glance: ['tab-glance', 'pane-glance', '#overview', renderGlance], ins: ['tab-ins', 'pane-ins', '#insights', renderIns], crit: ['tab-crit', 'pane-crit', '#critique', renderCrit], prog: ['tab-prog', 'pane-prog', '#progress', () => renderAll()]};
-function showTab(which) { Object.entries(TABS).forEach(([k, [t, p]]) => { $(t).setAttribute('aria-selected', String(k === which)); $(p).hidden = k !== which; });
+function showTab(which) { Object.entries(TABS).forEach(([k, [t, p]]) => { $(t).setAttribute('aria-selected', String(k === which)); $(p).hidden = k !== which; }); $('runSelWrap').style.visibility = which === 'prog' ? 'visible' : 'hidden';
   if (history.replaceState) history.replaceState(null, '', TABS[which][2]); TABS[which][3](); updateStanceBars(); }
 Object.entries(TABS).forEach(([k, [t]]) => { $(t).onclick = () => showTab(k); });
 renderBookcard();

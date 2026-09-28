@@ -119,27 +119,117 @@ details summary{cursor:pointer;color:var(--text-secondary)}
 .crit details{border-bottom:1px solid var(--grid);padding:6px 0}.crit summary{cursor:pointer;font-weight:600}
 .checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 14px;margin:0 0 10px;font-size:12px}
 .checks .ok{color:var(--good-text)}.checks .no{color:var(--critical)}
+
+/* ===== modern theme ===== */
+.viz-root{--radius:14px;--shadow:0 1px 2px rgba(16,24,40,.04),0 6px 20px rgba(16,24,40,.06);--accent:var(--seq);
+  font-family:"Pretendard","Apple SD Gothic Neo",system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:-.01em;max-width:1240px;padding:28px 28px 64px}
+@media (prefers-color-scheme:light){.viz-root{--page:#f5f6f8}}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) .viz-root{--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25)}}
+html,body{background:#f5f6f8}
+@media (prefers-color-scheme:dark){html,body{background:#0d0d0d}}
+h1{font-size:22px;font-weight:750;letter-spacing:-.02em}
+h2{font-size:16px;font-weight:700;margin:0 0 14px;letter-spacing:-.015em}
+.card,.tile{border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border)}
+.card{padding:20px 22px;margin-top:18px}
+.tiles{gap:14px;margin-top:18px}.tile{padding:16px 18px}.tile .v{font-size:30px;font-weight:750;letter-spacing:-.02em}
+.topbar{padding-bottom:4px}
+.badge{border-radius:999px;padding:4px 10px;background:var(--surface-1)}
+/* 탭: 상단 고정 세그먼트 */
+.tabs{position:sticky;top:0;z-index:5;margin:18px -28px 0;padding:10px 28px;border:none;gap:4px;
+  background:color-mix(in srgb,var(--page) 82%,transparent);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px)}
+.tabs button{border:none;border-radius:999px;padding:8px 16px;font-weight:600;color:var(--text-secondary);transition:background .15s,color .15s}
+.tabs button:hover{background:color-mix(in srgb,var(--text-primary) 6%,transparent)}
+.tabs button[aria-selected="true"]{background:var(--text-primary);color:var(--surface-1);border:none}
+/* 책 정보: 접기 */
+details.bookcard{padding:0;overflow:hidden}
+details.bookcard>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:18px 22px}
+details.bookcard>summary::-webkit-details-marker{display:none}
+details.bookcard>summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s;align-self:center}
+details.bookcard[open]>summary::after{transform:rotate(-135deg)}
+details.bookcard>summary .bt{font-size:19px;font-weight:750}.bookcard .bs{color:var(--text-secondary)}
+details.bookcard>summary .bm{color:var(--muted);font-size:13px}
+#bookBody{padding:0 22px 18px;border-top:1px solid var(--grid)}
+.bookcard dl{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px 22px;margin:16px 0 4px}
+.bookcard dl>div{display:flex;flex-direction:column;gap:2px}
+.bookcard dt{font-size:11px;text-transform:none;color:var(--muted);letter-spacing:.02em}.bookcard dd{font-size:14px;margin:0}
+.src-note{font-size:11px;margin-top:10px}
+/* 한 줄 요약 */
+.hero{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 10%,var(--surface-1)),var(--surface-1) 60%)}
+.oneline{font-size:21px;font-weight:700;line-height:1.55;letter-spacing:-.02em}
+/* 핵심 요약: 두 패널 */
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px}
+@media (max-width:960px){.split{grid-template-columns:1fr}}
+.panel{background:color-mix(in srgb,var(--text-primary) 2.5%,var(--surface-1));border:1px solid var(--grid);border-radius:12px;padding:16px 16px 6px;min-width:0}
+.panel>header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid var(--grid)}
+.panel .pt{font-weight:700;font-size:14px}
+.flow{list-style:none;padding:0;margin:0;counter-reset:ch;position:relative}
+.flow li{position:relative;padding:0 0 16px 36px;counter-increment:ch}
+.flow li::before{content:counter(ch);position:absolute;left:0;top:0;width:24px;height:24px;border-radius:50%;background:var(--surface-1);border:1.5px solid var(--accent);color:var(--accent);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.flow li::after{content:"";position:absolute;left:11.5px;top:26px;bottom:2px;width:1.5px;background:var(--grid)}
+.flow li:last-child::after{display:none}
+.flow .fh{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.flow .fh b{font-size:13.5px}
+.flow .mins{font-size:11px;color:var(--muted);white-space:nowrap}
+.flow .ft{display:block;font-size:13px;color:var(--text-secondary);line-height:1.6;margin-top:3px}
+.cards{gap:14px}.icard{border-radius:12px;padding:14px 16px;transition:border-color .15s,box-shadow .15s}
+.icard:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--border));box-shadow:var(--shadow)}
+.icard h3{font-size:14.5px;font-weight:700}
+.chip,.anc{border-radius:999px;background:color-mix(in srgb,var(--text-primary) 5%,transparent);border-color:transparent}
+.anc{padding:0 7px;font-size:11px}.anc:hover,.chip:hover{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--text-primary)}
+.stance button,.stancebar button,.qs button,.seg button{border-radius:999px}
+.seg{border-radius:999px;padding:2px;background:color-mix(in srgb,var(--text-primary) 5%,transparent);border:none}
+.seg button{padding:5px 12px}
+.seg button[aria-pressed="true"]{background:var(--surface-1);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.heat{border-collapse:separate;border-spacing:3px}.heat td.h{border:none;border-radius:6px}
+.heat th{font-size:12px;font-weight:600;color:var(--text-secondary);border:none}
+.fig{border-radius:12px;padding:8px;transition:transform .12s,box-shadow .12s}.fig:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.fig img{border-radius:8px}
+/* 원문 서랍 + 목차 리모콘 */
+#drawer{width:min(780px,96vw);padding:0;display:grid;grid-template-columns:minmax(0,1fr) 200px;border-radius:16px 0 0 16px;
+  background:var(--surface-1);overflow:hidden}
+#drawer[hidden]{display:none}
+#drawer .dmain{padding:22px 24px;overflow:auto;display:flex;flex-direction:column}
+#drawer .dh{margin-bottom:14px}#drawer .dh b{font-size:16px;line-height:1.4}
+#drawer .srcp{font-size:15px;line-height:1.85;margin:0 0 12px;padding:8px 12px;border-radius:10px;color:var(--text-secondary);cursor:pointer}
+#drawer .srcp.cur{color:var(--text-primary);background:color-mix(in srgb,var(--accent) 9%,transparent);box-shadow:inset 3px 0 0 var(--accent)}
+#drawer h4.srch{font-size:14px;margin:14px 0 6px;padding:0 12px;cursor:pointer}#drawer h4.srch.cur{color:var(--accent)}
+#drawer .verdict{font-size:13px;background:color-mix(in srgb,var(--text-primary) 4%,transparent);border-radius:10px;padding:10px 12px}
+#drawer .dnav{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:16px}
+#drawer .dkeys{font-size:11px;margin-top:8px;text-align:center}
+#drawer button{border-radius:999px;padding:5px 12px}
+#remote{border-left:1px solid var(--grid);padding:16px 10px;overflow:auto;display:flex;flex-direction:column;gap:2px;background:color-mix(in srgb,var(--text-primary) 2.5%,transparent)}
+#remote .rt{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.06em;padding:0 8px 8px}
+#remote button{all:unset;cursor:pointer;display:block;font-size:12.5px;line-height:1.35;padding:6px 8px;border-radius:8px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#remote button:hover{background:color-mix(in srgb,var(--text-primary) 6%,transparent);color:var(--text-primary)}
+#remote .rc.on{color:var(--text-primary);font-weight:700;background:color-mix(in srgb,var(--accent) 12%,transparent)}
+#remote .rs{font-size:12px;padding:4px 8px 4px 18px;white-space:normal}
+#remote .rs.on{color:var(--accent);font-weight:700;box-shadow:inset 2px 0 0 var(--accent)}
+@media (max-width:720px){#drawer{grid-template-columns:1fr}#remote{display:none}}
+#readerBtn{position:fixed;right:22px;bottom:22px;z-index:7;font:inherit;font-weight:700;font-size:13px;border:none;border-radius:999px;padding:11px 18px;
+  background:var(--text-primary);color:var(--surface-1);box-shadow:0 6px 20px rgba(0,0,0,.18);cursor:pointer}
+body.reading #readerBtn{display:none}
+#revBody{max-width:800px}.stars{color:var(--text-primary);letter-spacing:.05em}
+#tip{border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14)}
 </style>
 </head>
 <body>
 <div class="viz-root">
-  <div class="row" style="justify-content:space-between">
+  <div class="row topbar" style="justify-content:space-between">
     <div>
       <h1 id="title"></h1>
       <div class="sub" id="subtitle"></div>
     </div>
     <div class="row">
       <span id="state" class="badge"><i class="dot"></i><span></span></span>
-      <label class="sub">실행 <select id="runSel"></select></label>
+      <label class="sub" id="runSelWrap">실행 <select id="runSel"></select></label>
     </div>
   </div>
 
-  <div class="card bookcard" id="bookcard"></div>
+  <details class="card bookcard" id="bookcard" open><summary id="bookSum"></summary><div id="bookBody"></div></details>
   <div class="tabs" role="tablist">
-    <button role="tab" id="tab-glance" aria-selected="true">한눈에 보기</button>
+    <button role="tab" id="tab-prog" aria-selected="true">진행 현황</button>
+    <button role="tab" id="tab-glance" aria-selected="false">한눈에 보기</button>
     <button role="tab" id="tab-ins" aria-selected="false">인사이트</button>
     <button role="tab" id="tab-crit" aria-selected="false">반박·비평</button>
-    <button role="tab" id="tab-prog" aria-selected="false">진행 현황</button>
   </div>
 
   <div class="pane" id="pane-glance" hidden>
@@ -147,8 +237,10 @@ details summary{cursor:pointer;color:var(--text-secondary)}
     <div class="card"><div class="row" style="justify-content:space-between"><h2>리뷰</h2><div class="seg" id="revSeg"></div></div>
       <div id="revMeta" class="row" style="margin-bottom:8px"></div><div id="revChecks"></div><div id="revBody" class="prose"></div></div>
     <div class="card"><h2>핵심 요약</h2>
-      <div class="two2"><div><h3 class="h3">장별 흐름</h3><ol class="flow" id="flow"></ol></div>
-      <div><div class="row" style="justify-content:space-between"><h3 class="h3">핵심 주장 <span class="sub" id="nClaims"></span></h3><span class="stancebar"></span></div><div class="cards one" id="claims"></div></div></div></div>
+      <div class="split">
+        <section class="panel"><header><span class="pt">장별 흐름</span><span class="sub">각 장의 L1 요약 앞부분 · 읽기 시간</span></header><ol class="flow" id="flow"></ol></section>
+        <section class="panel"><header><span class="pt">핵심 주장 <span class="sub" id="nClaims"></span></span><span class="stancebar"></span></header><div class="cards one" id="claims"></div></section>
+      </div></div>
     <div class="card"><h2>장 지도</h2><div class="sub" style="margin-bottom:8px">장마다 핵심 주장·반박·도표 판정이 얼마나 몰려 있는지. 색이 진할수록 그 열에서 값이 큽니다. 읽기 안내는 이 값들로 자동으로 정한 것입니다.</div>
       <div style="overflow-x:auto"><table class="heat" id="heat"></table></div></div>
     <div class="card"><h2>이야기해 볼 질문</h2><ol class="qs" id="qs"></ol>
@@ -170,8 +262,16 @@ details summary{cursor:pointer;color:var(--text-secondary)}
       <div class="seg" id="figSeg" style="margin-bottom:10px"></div><div class="figs" id="figs"></div></div>
   </div>
 
-  <aside id="drawer" hidden aria-label="원문"><div class="dh"><div><div id="dCh" class="sub"></div><b id="dTitle"></b></div><button id="dClose" aria-label="닫기">✕</button></div>
-    <div id="dBody" class="prose"></div><div class="row" style="justify-content:space-between;margin-top:10px"><button id="dPrev">← 앞 문단</button><button id="dNext">다음 문단 →</button></div></aside>
+  <aside id="drawer" hidden aria-label="원문 보기">
+    <div class="dmain">
+      <div class="dh"><div><div id="dCh" class="sub"></div><b id="dTitle"></b></div><button id="dClose" aria-label="닫기">✕</button></div>
+      <div id="dBody" class="prose"></div>
+      <div class="dnav"><button id="dPrev">← 앞 문단</button><span class="sub" id="dPos"></span><button id="dNext">다음 문단 →</button></div>
+      <div class="sub dkeys">← → 문단 · ↑ ↓ 소제목 · PgUp PgDn 장 · Esc 닫기</div>
+    </div>
+    <nav id="remote" aria-label="목차"></nav>
+  </aside>
+  <button id="readerBtn" title="원문 보기">원문</button>
 
   <div class="pane" id="pane-prog">
   <div class="tiles" id="tiles"></div>
@@ -430,7 +530,7 @@ function renderTables(){const S=scope();
 function renderAll(){renderTiles();renderStages();renderGantt();renderLines();renderRunning();renderGrid();renderTables()}
 const HASH={'#overview':'glance','#insights':'ins','#critique':'crit','#progress':'prog'};
 const hasBook=(D.insights&&D.insights.claims&&D.insights.claims.length);
-showTab(HASH[location.hash]||(hasBook&&!isLive(lastRun)?'glance':'prog'));
+showTab(HASH[location.hash]||'prog');
 addEventListener('resize',()=>{clearTimeout(window._rz);window._rz=setTimeout(()=>{const cur=Object.keys(TABS).find(k=>!$(TABS[k][1]).hidden)||'prog';TABS[cur][3]()},150)});
 // 실행 중이면 경과 시간은 1초마다, 타임라인은 10초마다 갱신
 if(isLive(lastRun)){
