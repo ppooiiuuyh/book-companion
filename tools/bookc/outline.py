@@ -33,7 +33,7 @@ def build_notes(book: Book, cid: str) -> dict:
     text = re.sub(r"<!-- p\d+ -->", "", text)
     notes = {}
     for mt in re.finditer(r"^(\d+)\.\s+(.*?)\s*(<!-- p\d+-b\d+ -->)?\s*$", text, re.M):
-        notes[mt.group(1)] = mt.group(2).strip()
+        notes[mt.group(1)] = re.sub(r" {2,}", " ", re.sub(r"\s*<!--.*?-->\s*", " ", mt.group(2))).strip()  # 쪽을 넘는 항목에 끼어든 앵커 제거
     write_json(book.work / "notes.json", notes)
     book.manifest.setdefault("roles", {})["notes"] = cid
     book.save()

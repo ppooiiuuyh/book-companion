@@ -97,7 +97,7 @@ def typo(s: str, dash: bool = True) -> str:
     """책의 조판 기호로 통일: 작은따옴표(위치로 여닫음 판단), 가운뎃점, 숫자 범위 대시."""
     s = s.replace("ㆍ", "·")
     if dash:
-        s = re.sub(r"(?<=\d)\s?-\s?(?=\d)", "–", s)
+        s = re.sub(r"(?<![\d\-–])(\d{1,4})\s?-\s?(\d{1,4})(?![\d\-–])", r"\1–\2", s)  # 범위만(ISBN·등록번호 같은 연쇄·긴 번호는 제외)
     out = []
     for i, ch in enumerate(s):
         if ch in "'\"‘’":
