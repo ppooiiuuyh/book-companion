@@ -155,7 +155,10 @@ details.bookcard>summary .bm{color:var(--muted);font-size:13px}
 .src-note{font-size:11px;margin-top:10px}
 /* 한 줄 요약 */
 .hero{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 10%,var(--surface-1)),var(--surface-1) 60%)}
-.oneline{font-size:21px;font-weight:700;line-height:1.55;letter-spacing:-.02em}
+.oneline{font-size:15px;font-weight:500;line-height:1.6;letter-spacing:-.01em}
+.oneline ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}
+.oneline li{position:relative;padding-left:16px}.oneline li::before{content:"";position:absolute;left:2px;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.oneline b{font-weight:700;margin-right:2px}.oneline p{margin:4px 0}
 /* 핵심 요약: 두 패널 */
 .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px}
 @media (max-width:960px){.split{grid-template-columns:1fr}}
