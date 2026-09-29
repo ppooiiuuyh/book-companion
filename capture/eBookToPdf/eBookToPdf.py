@@ -1,3 +1,13 @@
+# /// script
+# requires-python = ">=3.10,<3.15"
+# dependencies = [
+#     "mss>=10.2.0,<11",
+#     "pynput>=1.8.2,<2",
+#     "pillow>=12.3.0,<13",
+#     "natsort>=8.4.0,<9",
+#     "pyside6>=6.11.2,<7",
+# ]
+# ///
 """
 eBookToPdf (개선판)
 - 저장 경로 설정
@@ -6,7 +16,8 @@ eBookToPdf (개선판)
 - 중단 / 이어하기 (시작 페이지 입력)
 - 이미 캡처된 이미지로 PDF만 만들기
 
-필요 패키지: pip install PySide6 pynput mss pillow natsort
+실행: uv run eBookToPdf.py (필요 패키지는 이 파일 머리의 script 블록에 있어 uv가 알아서 설치)
+필요 패키지: PySide6 pynput mss pillow natsort
 macOS 권한: 손쉬운 사용, 입력 모니터링, 화면 기록 (실행하는 터미널/IDE에 부여)
 """
 import os

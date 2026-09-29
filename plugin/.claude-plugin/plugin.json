@@ -1,6 +1,6 @@
 {
   "name": "book-companion",
-  "version": "0.6.4",
+  "version": "0.8.0",
   "description": "스캔 책 PDF를 쪽 앵커가 붙은 Markdown 원문 + 조사·통독·요약 층으로 만들어 Claude와 같이 읽는 지식 베이스를 구축합니다.",
   "author": {
     "name": "dohyun"

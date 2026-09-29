@@ -52,7 +52,7 @@ description: book-companion 전체 실행. 스캔 책 PDF 하나를 인테이크
 1. `$BC can $B synthesize`가 통과하면 `PLUGIN/skills/bookc-5-synthesize/SKILL.md`의 절차를 수행한다.
 2. 이어서 `PLUGIN/skills/bookc-6-insight/SKILL.md`의 절차를 수행한다(한 줄 요약·핵심 주장·인사이트·반박 → insights.md).
 3. 이어서 `PLUGIN/skills/bookc-7-review/SKILL.md`의 절차를 수행한다(서점 리뷰·비평형 서평·독서 기록 → reviews/). 사용자 관점을 묻는 질문은 이 시점에 한 번만 한다.
-4. `$BC status $B`, insights.md의 한 줄 요약, 결과 폴더 위치(사용자 기기의 `project/book-companion/books/<slug>/`)를 알린다. 이어서 `/bookc-open <책>`으로 대화를 시작할 수 있다고 안내한다.
+4. `$BC status $B`, insights.md의 한 줄 요약, 결과 폴더 위치(사용자 기기의 `<PROJECT>/books/<slug>/`, 실제 경로로)를 알린다. 이어서 `/bookc-open <책>`으로 대화를 시작할 수 있다고 안내한다.
 
 ## 4. 멈춰야 할 때
 

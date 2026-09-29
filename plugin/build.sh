@@ -9,6 +9,9 @@ mkdir -p "$STAGE/scripts" "$STAGE/references"
 cp "$ROOT/plugin/scripts/setup.sh" "$STAGE/scripts/"
 cp -R "$ROOT/tools" "$ROOT/models" "$STAGE/scripts/"
 cp "$ROOT/references/"*.md "$STAGE/references/"
+mkdir -p "$STAGE/scripts/capture/eBookToPdf"
+cp "$ROOT/capture/run.sh" "$STAGE/scripts/capture/"
+cp "$ROOT/capture/eBookToPdf/eBookToPdf.py" "$ROOT/capture/eBookToPdf/LICENSE" "$STAGE/scripts/capture/eBookToPdf/"
 find "$STAGE" -name __pycache__ -prune -exec rm -rf {} + ; find "$STAGE" -name .DS_Store -delete
 mkdir -p "$OUT"; rm -f "$OUT/book-companion.plugin"
 (cd "$STAGE" && zip -qr "$OUT/book-companion.plugin" .)

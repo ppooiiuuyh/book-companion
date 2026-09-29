@@ -17,4 +17,4 @@ description: book-companion 진행 상태 확인. 책 하나(또는 모든 책)�
 ## 진행 현황 페이지
 
 - 인자가 있으면 `$BC progress $B`로 progress.html을 다시 그린다. 방식 A에서는 기기로 보낸다(runtime.md 7절).
-- 그다음 `project/book-companion/books/<slug>/progress.html` 위치를 computer:// 링크로 함께 알려 준다.
+- 그다음 `<PROJECT>/books/<slug>/progress.html`(runtime.md 2절에서 찾은 실제 경로) 위치를 computer:// 링크로 함께 알려 준다.

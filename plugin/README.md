@@ -14,17 +14,23 @@
 | `/bookc-5-synthesize <책>` | 책 요약(index.md)과 외부 평가 대조(synthesis.md) | 4 |
 | `/bookc-6-insight <책>` | 한 줄 요약·핵심 주장·인사이트·반박 지점(insights.md) | 5 |
 | `/bookc-7-review <책>` | 서점 리뷰·비평형 서평·독서 기록(reviews/) + 자체 점검표. 페이지에서 표시한 내 입장(my_stance.json) 반영 | 6 |
+| `/bookc-capture` | PDF가 없는 전자책: 캡처 도구를 폴더에 준비하고 터미널에 붙여 넣을 명령 한 줄을 안내 | – |
 | `/bookc-status [책]` | 진행 상태 | – |
+| `/bookc-chat` | 안내 데스크: 폴더 위치(옮겼을 때 다시 찾기), 책 목록·상태, 플러그인 질문, 오류 대응, 책 질문 | – |
 | `/bookc-open <책>` | 만든 지식 베이스로 대화 | 2 일부 |
 
-PDF가 없는 전자책은 먼저 `~/project/book-companion/capture/eBookToPdf`로 화면을 캡처해 PDF를 만듭니다(사용자가 직접 실행하며, 결과는 `books-pdf/`에 저장됩니다).
+PDF가 없는 전자책은 `/bookc-capture`로 캡처 도구를 준비하고, 안내받은 명령 한 줄을 터미널에 붙여 넣어 직접 캡처합니다(결과는 `books-pdf/`에 저장됩니다).
 
-`<pdf>`에는 경로나 파일명을 씁니다. 파일명만 쓰면 `~/project/book-companion/books-pdf/`에서만 찾습니다. 선행 단계가 끝나지 않은 단계 명령은 실행하지 않고, 무엇이 먼저 필요한지 알려 줍니다.
+`<pdf>`에는 경로나 파일명을 씁니다. 파일명만 쓰면 프로젝트 폴더의 `books-pdf/`에서만 찾습니다. 선행 단계가 끝나지 않은 단계 명령은 실행하지 않고, 무엇이 먼저 필요한지 알려 줍니다.
+
+## 처음 쓸 때
+
+아무 명령이나 처음 실행하면 작업 폴더(프로젝트)를 한 번 정합니다. 기존 폴더가 있으면 연결하고, 없으면 원하는 위치(추천 `~/BookCompanion`)에 만듭니다. 폴더 맨 위의 `book-companion.json` 표식으로 알아보므로, 나중에 폴더를 옮겨도 다시 연결하면 그대로 이어집니다. 어디 있는지 모르겠으면 `/bookc-chat`.
 
 ## 폴더
 
 ```
-~/project/book-companion/
+<프로젝트 폴더>/          맨 위에 book-companion.json 표식
 ├── books-pdf/            PDF 보관
 └── books/<책>/
     ├── index.md          입구: L0 요약·목차·핵심 개념 (5단계)
