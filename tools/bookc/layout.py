@@ -66,8 +66,9 @@ def find_figures(gray: np.ndarray, text_boxes: list, H: float) -> list[list[int]
 
 
 def hangul_ratio(t: str) -> float:
+    """본문 글자 비율. 한글과 로마자(원서) 모두 본문 글자로 센다."""
     t = re.sub(r"\s", "", t)
-    return sum(1 for c in t if "가" <= c <= "힣") / max(len(t), 1)
+    return sum(1 for c in t if "가" <= c <= "힣" or ("a" <= c.lower() <= "z")) / max(len(t), 1)
 
 
 def run_page(book: Book, page: int) -> dict:
@@ -97,6 +98,10 @@ def run_page(book: Book, page: int) -> dict:
     textlike = [l["bbox"] for l in lines if l["conf"] > 80 and (l["bbox"][2] - l["bbox"][0]) > 0.35 * pw
                 and hangul_ratio(l["text"]) > 0.6 and not FIGTITLE_RE.match(l["text"])]
     figs = find_figures(gray, textlike, H)
+    # 스캔 가장자리(제본 그림자 등): 쪽 위아래 끝에 모두 닿는 덩어리는 도표가 아니다
+    figs = [f for f in figs if not (f[1] <= CELL and f[3] >= ph - 2 * CELL)]
+    if not book.manifest.get("settings", {}).get("layout", {}).get("figures", True):
+        figs = []   # 도표 없는 책: $BC set <책> settings.layout.figures=false
     figures = [{"id": None, "bbox": f, "lines": []} for f in figs]
 
     prev_bottom = None

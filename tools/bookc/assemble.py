@@ -19,9 +19,23 @@ def kiwi():
     return _kiwi
 
 
+def _latin(c: str) -> bool:
+    return c.isascii() and c.isalnum()
+
+
+def dehyphen(out: str, nxt: str, force: str | None = None) -> str:
+    """원서의 줄 끝 하이픈(psycho-/logical)을 없앤다. 복합어 하이픈은 join "hyphen"으로 남긴다."""
+    if force == "hyphen":
+        return out
+    t = nxt.lstrip()
+    if len(out) >= 2 and out[-1] == "-" and out[-2].isascii() and out[-2].isalpha() and t[:1].isascii() and t[:1].islower():
+        return out[:-1]
+    return out
+
+
 def join_space(a: str, b: str, force: str | None = None) -> str:
     """줄 a 끝과 줄 b 시작 사이에 공백을 넣을지 결정."""
-    if force in ("space", "nospace"):
+    if force in ("space", "nospace", "hyphen"):
         return " " if force == "space" else ""
     a, b = a.rstrip(), b.lstrip()
     if not a or not b:
@@ -32,8 +46,10 @@ def join_space(a: str, b: str, force: str | None = None) -> str:
         return " "
     if a[-1] in PUNCT_END:
         return " "
-    if a[-1] in "–-" or b[0] in "–-":
+    if a[-1] in "–-—" or b[0] in "–-—":
         return ""
+    if _latin(a[-1]) and _latin(b[0]):   # 원서(로마자): 줄 끝은 단어 경계
+        return " "
     ta = " ".join(a.split()[-2:]); tb = " ".join(b.split()[:2])
     spaced = kiwi().space(ta + tb, reset_whitespace=False)
     # 경계 위치(공백 아닌 글자 수 기준)에 공백이 들어갔는지 확인
@@ -52,7 +68,11 @@ def para_text(block: dict) -> str:
         if i == 0:
             out = t.rstrip() if re.match(r"^\s+[-•*]\s", t) else t.strip()
         else:
-            out += join_space(out, t, block["joins"][i - 1] if i - 1 < len(block["joins"]) else None) + t.strip()
+            f = block["joins"][i - 1] if i - 1 < len(block["joins"]) else None
+            sep = join_space(out, t, f)
+            if sep == "":
+                out = dehyphen(out, t, f)
+            out += sep + t.strip()
     return typo(out)
 
 
@@ -109,6 +129,7 @@ def run_chapter(book: Book, cid: str) -> str:
     reviewed = 0
     heading = f"# {ch['label']} {ch['title']}" if ch["label"] != ch["title"] else f"# {ch['title']}"
     pending_para = None  # 쪽·도표를 건너 이어지는 문단
+    pending_join = None  # 그 문단 끝 줄의 join(쪽 경계 결합)
 
     def flush():
         nonlocal pending_para
@@ -135,14 +156,21 @@ def run_chapter(book: Book, cid: str) -> str:
             t = blk["type"]
             if t == "para" and blk.get("cont") and pending_para is not None:
                 txt = para_text(blk)
-                sep = join_space(pending_para, txt)
+                sep = join_space(pending_para, txt, pending_join)
+                if sep == "":
+                    pending_para = dehyphen(pending_para, txt, pending_join)
                 if not page_mark_done:
-                    # 쪽 표시는 이어지는 문단 안, 경계 다음 첫 공백 뒤에 넣는다
-                    m = re.search(r"\s", txt)
-                    cut = m.start() + 1 if m else len(txt)
-                    txt = txt[:cut] + f"<!-- {pid(page)} -->" + ("" if cut == len(txt) else "") + txt[cut:]
+                    # 쪽 표시는 이어지는 문단 안, 새 쪽 첫 글자 바로 앞에 넣는다.
+                    # 쪽 경계에서 단어가 붙어 이어지면(sep == "") 단어를 깨지 않도록 그 단어 뒤 첫 공백 뒤에 넣는다.
+                    if sep:
+                        cut = 0
+                    else:
+                        m = re.search(r"\s", txt)
+                        cut = m.start() + 1 if m else len(txt)
+                    txt = txt[:cut] + f"<!-- {pid(page)} -->" + txt[cut:]
                     page_mark_done = True
                 pending_para += sep + txt
+                pending_join = blk.get("tail_join")
                 continue
             flush()
             if deferred_figs and t != "figure":
@@ -161,10 +189,12 @@ def run_chapter(book: Book, cid: str) -> str:
                 body.append(md); body.append("")
             elif t in ("para", "note"):
                 txt = para_text(blk)
-                if re.match(r"^\s*(\d+\.|[-•*])\s", txt):   # 목록 항목: 앵커를 뒤에 둬야 목록으로 렌더링됨
+                if re.match(r"^\s*(\d{1,2}\.|[-•*])\s", txt):   # 목록 항목: 앵커를 뒤에 둬야 목록으로 렌더링됨
                     pending_para = re.sub(r"^(\s*)[•*]\s", r"\1- ", txt) + f" <!-- {blk['id']} -->"
+                    pending_join = blk.get("tail_join")
                 else:
                     pending_para = f"<!-- {blk['id']} -->" + txt
+                    pending_join = blk.get("tail_join")
                 if t == "note":
                     flush()
     flush()

@@ -35,5 +35,6 @@ description: book-companion 5단계. 장 요약·통독 메모·외부 조사를
 - 끝나면 `stage-end`, `run-end status=done`을 기록하고 progress.html을 보낸다. 도중에 멈추면 `run-end status=stopped note=사유`를 기록한다.
 ## 규칙
 
+- **언어**: 독자에게 보이는 글은 모두 한국어로 쓴다. 원문 인용·용어는 한국어 뒤에 괄호나 인용으로 붙인다(conventions.md 7절). 원문 층(source.md)은 번역하지 않는다.
 - index.md의 요약은 원문 근거만. 외부 의견과 Claude의 평가는 synthesis.md에.
 - 링크는 책 폴더 기준 상대 경로. Obsidian·일반 Markdown 뷰어에서 모두 열려야 한다.

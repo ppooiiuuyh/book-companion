@@ -99,6 +99,7 @@ def _inline(t: str) -> str:
     import re
     t = html.escape(t, quote=False)
     t = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", t)
+    t = re.sub(r"==(.+?)==", r"<mark>\1</mark>", t)
     t = re.sub(r"`([^`]+)`", r"<code>\1</code>", t)
     t = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", lambda m: f'<a href="{html.escape(m.group(2))}">{m.group(1)}</a>', t)
     t = re.sub(r"\b(p\d{3}(?:-b\d+)?)\b", r'<span class="anc" data-anc="\1">\1</span>', t)

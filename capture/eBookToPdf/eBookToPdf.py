@@ -193,8 +193,9 @@ class PdfWorker(QThread):
         self.grayscale = grayscale    # 흑백 변환
         self.dpi = dpi                # PDF 페이지 크기 계산용 (픽셀 / dpi = 인치)
 
-    def _prepare(self, im):
-        im = im.convert("L" if self.grayscale else "RGB")
+    def _prepare(self, im, keep_color=False):
+        # 첫 페이지(표지)는 흑백 변환 설정과 상관없이 항상 컬러로 둔다
+        im = im.convert("L" if (self.grayscale and not keep_color) else "RGB")
         if self.max_side and max(im.size) > self.max_side:
             ratio = self.max_side / max(im.size)
             new_size = (max(1, round(im.width * ratio)), max(1, round(im.height * ratio)))
@@ -210,12 +211,12 @@ class PdfWorker(QThread):
                 return
 
             opt = (f"{'리사이즈 안 함' if not self.max_side else '긴 변 ' + str(self.max_side) + 'px'}, "
-                   f"JPEG 품질 {self.quality}, {'흑백' if self.grayscale else '컬러'}, {self.dpi} DPI")
+                   f"JPEG 품질 {self.quality}, {'흑백(첫 페이지는 컬러)' if self.grayscale else '컬러'}, {self.dpi} DPI")
             self.log.emit(f"PDF 변환 시작: 이미지 {len(files)}장 ({opt})")
             images = []
             for i, f in enumerate(files, 1):
                 with Image.open(f) as im:
-                    images.append(self._prepare(im))
+                    images.append(self._prepare(im, keep_color=(i == 1)))
                 self.progress.emit(i, len(files))
                 if i == 1:
                     w, h = images[0].size
@@ -333,7 +334,7 @@ class MainWindow(QMainWindow):
         self.spin_quality.setToolTip("PDF 안의 이미지는 JPEG로 저장됩니다. 85~92면 글자가 깨끗하고 용량도 적당합니다.")
         self.spin_dpi = QSpinBox(); self.spin_dpi.setRange(72, 600); self.spin_dpi.setValue(144)
         self.spin_dpi.setToolTip("화질에는 영향 없음. PDF 뷰어에서 100% 배율일 때의 페이지 크기만 바뀝니다.")
-        self.chk_gray = QCheckBox("흑백 변환 (컬러 삽화가 많은 책에서 용량 절감)")
+        self.chk_gray = QCheckBox("흑백 변환 (컬러 삽화가 많은 책에서 용량 절감 · 첫 페이지(표지)는 항상 컬러)")
         g4.addWidget(QLabel("이미지 크기"), 0, 0); g4.addWidget(self.combo_size, 0, 1)
         g4.addWidget(QLabel("JPEG 품질"), 1, 0); g4.addWidget(self.spin_quality, 1, 1)
         g4.addWidget(QLabel("PDF DPI"), 2, 0); g4.addWidget(self.spin_dpi, 2, 1)

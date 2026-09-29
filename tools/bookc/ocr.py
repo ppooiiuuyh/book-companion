@@ -2,16 +2,16 @@
 from __future__ import annotations
 import csv, io, os, subprocess, tempfile, time
 from concurrent.futures import ThreadPoolExecutor
-from .common import Book, pid, MODELS_DIR, write_json, read_json
+from .common import Book, pid, MODELS_DIR, write_json, read_json, tess_lang_args
 from .intake import page_image
 
 
-def tesseract_txt_tsv(img, psm=4) -> tuple[str, str]:
+def tesseract_txt_tsv(img, psm=4, lang="kor") -> tuple[str, str]:
     """한 번의 실행으로 txt(띄어쓰기 정확)와 tsv(위치·신뢰도)를 함께 받는다."""
     env = dict(os.environ, OMP_THREAD_LIMIT="1")
     with tempfile.TemporaryDirectory() as td:
         base = os.path.join(td, "o")
-        subprocess.run(["tesseract", str(img), base, "--tessdata-dir", str(MODELS_DIR), "-l", "kor",
+        subprocess.run(["tesseract", str(img), base, *tess_lang_args(lang),
                         "--psm", str(psm), "txt", "tsv"], capture_output=True, env=env)
         return (open(base + ".txt", encoding="utf-8").read(), open(base + ".tsv", encoding="utf-8").read())
 
@@ -75,7 +75,7 @@ def ocr_page(book: Book, page: int, force=False) -> dict:
     if dst.exists() and not force:
         return read_json(dst)
     t = time.time()
-    txt, tsv = tesseract_txt_tsv(page_image(book, page), book.manifest["settings"]["ocr"]["psm"])
+    txt, tsv = tesseract_txt_tsv(page_image(book, page), book.manifest["settings"]["ocr"]["psm"], book.manifest["settings"]["ocr"].get("lang", "kor"))
     lines = parse_tsv(tsv)
     bad = attach_text(lines, txt)
     lines = finalize(lines)

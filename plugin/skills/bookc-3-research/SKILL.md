@@ -16,13 +16,14 @@ description: book-companion 3단계. 책에 대한 서점 리뷰·블로그 후�
 3. **병합** (영역 파일 4개가 모두 생기면, 직접 한다):
    - `research/_parts/*.md`를 모두 읽고 출처를 합친다. 같은 URL이나 같은 글의 재게시는 하나로 합치고, 번호를 새로 매긴다(`[1]`…).
    - `B/research/`에 네 파일을 쓴다. 모든 주장에 새 번호의 출처를 단다. 각 파일 머리에 frontmatter(`book`, `layer: research`, `generated`)를 둔다.
-     - `sources.md` — 번호, 제목, 사이트, 날짜, 유형(서점/블로그/기사/학술/원서), URL, 한 줄 요지
+     - `sources.md` — 번호, 제목, 사이트, 날짜, 유형(서점/블로그/기사/학술/원서), URL, 한 줄 요지(외국어 자료도 한국어로)
      - `highlights.md` — 독자들이 꼽은 핵심 주장, 인상 깊은 부분, 자주 인용되는 대목. `$BC outline $B`의 장 목록에 맞춰 장을 표시한다. 여러 영역에서 겹친 것은 "여러 출처 공통"으로 표시한다
      - `critiques.md` — 비판·반론·한계(방법론, 표본, 시대성, 번역 품질 등). 찬반이 갈리는 지점은 양쪽 출처를 함께 단다
      - `watchlist.md` — 통독 때 확인할 질문. 형식: `- [ ] Q3. (제4장) 연봉 300만 엔 기준의 근거 데이터는? — 출처 [5][8]`. 4단계에서 답을 채운다
    - `_parts/`는 지우지 않는다. 기록으로 남긴다.
-4. `$BC mark $B research --files sources.md,highlights.md,critiques.md,watchlist.md` 다음 체크포인트.
-5. **보고**: 출처 수(유형별), 하이라이트 3개, 주요 논쟁점 2–3개, watchlist 질문 수를 짧게 보고한다.
+4. 조사에서 원서 정보(원제·원서 출판사·출간 연도)나 같은 원서의 다른 한국어판이 확인되면 manifest의 `book.original_title`·`original_publisher`·`original_pub_date`·`prior_editions`에 채운다(1단계 '서지 정보' 참고, 진행 현황 페이지 책 정보 칸에 나온다).
+5. `$BC mark $B research --files sources.md,highlights.md,critiques.md,watchlist.md` 다음 체크포인트.
+6. **보고**: 출처 수(유형별), 하이라이트 3개, 주요 논쟁점 2–3개, watchlist 질문 수를 짧게 보고한다.
 
 ## 영역 작업자 지시문
 
@@ -38,6 +39,7 @@ description: book-companion 3단계. 책에 대한 서점 리뷰·블로그 후�
 - 끝나면 `stage-end`, `run-end status=done`을 기록하고 progress.html을 보낸다. 도중에 멈추면 `run-end status=stopped note=사유`를 기록한다.
 ## 규칙
 
+- **언어**: 독자에게 보이는 글은 모두 한국어로 쓴다. 원문 인용·용어는 한국어 뒤에 괄호나 인용으로 붙인다(conventions.md 7절). 원문 층(source.md)은 번역하지 않는다.
 - 외부 의견은 `research/`에만 둔다. source.md와 study.md에 섞지 않는다.
 - 출처 없는 주장은 쓰지 않는다. 블로그 한 곳의 주장은 "한 리뷰어는"처럼 범위를 밝힌다.
 - 기본은 스포일러 걱정이 없는 논픽션이다. 소설이면 결말 관련 내용은 `watchlist.md`에 "결말 관련"으로만 표시한다.

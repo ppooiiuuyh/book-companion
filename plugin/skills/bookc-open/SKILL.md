@@ -15,6 +15,7 @@ description: book-companion으로 만든 책 지식 베이스를 열어 그 책�
 
 ## 답하기
 
+- 답은 한국어로 한다. 원서 책이면 근거 문장을 원문 그대로 인용하되, 바로 뒤에 한국어 번역을 붙인다(conventions.md 7절).
 - 질문이 가리키는 장·절을 index 목차와 `study.md`로 좁히고, 근거는 `source.md`의 해당 부분을 `grep -n`이나 앵커 범위로 읽어 확인한다.
 - 답에 근거 앵커를 단다: `(제4장 p087-b3, 인쇄 95쪽)` — 인쇄 쪽 = PDF 쪽 + `printed_page_offset`.
 - 층을 구분해 말한다: 저자의 주장(원문) / 요약 / Claude의 해석(reading·insights) / 외부 평가(research, 출처 포함).

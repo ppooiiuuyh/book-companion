@@ -18,6 +18,15 @@ description: book-companion 1단계. 스캔 책 PDF에서 쪽 이미지를 꺼�
    $BC intake $B --pdf "$PDF" [--title … --author … --translator … --publisher … --year …]
    ```
    서지 정보는 판권 쪽(보통 앞쪽 2–4쪽 또는 맨 끝 쪽)을 Read로 보고 채운다. 모르면 비워 둔다(제목은 파일명에서 자동).
+   인테이크 뒤 `$BC set $B book.<키>=<JSON 값>`으로 진행 현황 페이지 책 정보 칸을 채운다(아는 것만): `pub_date`("2026년 7월 30일 (종이책) · 9월 30일 (전자책)"), `isbn`, `imprint`, `subtitle`, `genre`, 번역서면 `original_title`·`original_publisher`·`original_pub_date`, 같은 원서의 다른 한국어판은 `prior_editions`(목록, "『제목』 역자 옮김, 출판사 연도"), 판본 특이점은 `note`(예: 편역본, 인쇄 쪽 번호 없음). 편역·공역은 `translator`에 "김동선 편역"처럼 적는다("옮김"이 자동으로 붙지 않는다). 다른 번역서·원서 정보는 3단계 조사 뒤 보강해도 된다.
+   **원서(외국어 책)**: 인테이크 직후 언어를 지정하고, OCR 전에 둔다.
+   ```bash
+   $BC set $B book.lang='"en"'                 # ko가 아니면 lint가 로마자 단어를 잔재로 보지 않는다
+   $BC set $B settings.ocr.lang='"eng"'        # 번들 모델에 없으면 시스템 tessdata를 쓴다(tesseract --list-langs)
+   $BC set $B settings.layout.figures=false    # 도표 없는 책: 스캔 가장자리·회색 바탕을 도표로 오인하지 않게
+   ```
+   원서의 장 제목(`title`)은 "투기의 순환 (The Speculative Cycle)"처럼 한국어 뒤 원제를 괄호로 쓴다. `printed_page_offset`은 인쇄 쪽 − PDF 쪽(원서 스캔은 대개 음수).
+   **표지**: 진행 현황 페이지 왼쪽 위에 PDF 1쪽이 표지로 나온다. 표지가 다른 쪽이면 `$BC set $B book.cover_page=3`, 컬러 표지 파일이 있으면 책 폴더에 `cover.jpg`로 둔다(PDF 1쪽을 컬러로 뽑아 두면 좋다).
 4. **구조 확인** — 자동 검출은 틀릴 수 있으므로 반드시 눈으로 확인한다.
    - 출력된 장 목록의 각 시작 쪽(장 표지)과 그 앞 쪽을 `B/_work/pages/pNNN.jpg`로 Read해서 경계가 맞는지 본다. 목차 쪽이 있으면 목차와 대조한다.
    - 마지막 장의 끝 부분을 훑어 뒷부분(후기·옮긴이 후기·참고문헌·주석·찾아보기·저자 소개·판권)을 찾는다. 각각 `back=1`인 장으로 분리한다. id는 90부터.

@@ -27,7 +27,30 @@ def _label(c):
 def book_info(book: Book) -> dict:
     b = dict(book.manifest.get("book", {}))
     b.setdefault("pdf_pages", book.manifest.get("pdf", {}).get("pages"))
+    b["cover"] = cover_data_url(book)
     return b
+
+
+def cover_data_url(book: Book, height: int = 240) -> str | None:
+    """표지 썸네일(data URL). 책 폴더의 cover.jpg/png가 있으면 그것, 없으면 book.cover_page(기본 1쪽) 쪽 이미지."""
+    import base64, io
+    from PIL import Image
+    src = next((book.root / n for n in ("cover.jpg", "cover.jpeg", "cover.png") if (book.root / n).exists()), None)
+    if src is None:
+        n = int(book.manifest.get("book", {}).get("cover_page") or 1)
+        for ext in ("jpg", "png"):
+            q = book.work / "pages" / f"p{n:03d}.{ext}"
+            if q.exists():
+                src = q; break
+    if src is None:
+        return None
+    try:
+        im = Image.open(src).convert("RGB")
+        im.thumbnail((height * 2, height))
+        buf = io.BytesIO(); im.save(buf, "JPEG", quality=82)
+        return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
+    except Exception:
+        return None
 
 
 def source_blocks(book: Book) -> dict:

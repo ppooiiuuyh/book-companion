@@ -108,38 +108,136 @@ function updateStanceBars() {
 }
 
 // 공통 카드
-function card(box, it, extra, withStance) {
+function card(box, it, extra, footer) {
   const d = h('div', {class: 'icard', id: 'card-' + it.id}, box);
   const hh = h('h3', {}, d); h('span', {class: 'id'}, hh, it.id); hh.appendChild(document.createTextNode(it.title));
   if (extra) extra(d);
   const b = h('div', {}, d); setHTML(b, it.html); wireAnchors(b);
-  if (withStance) stanceUI(d, it);
+  if (typeof footer === 'function') footer(d);
   return d;
+}
+// 카드 아래 연결 목록 (주장 ↔ 반박)
+function linkList(d, label, rows) {
+  if (!rows.length) return;
+  const f = h('div', {class: 'lnk'}, d); h('div', {class: 'lnkHead'}, f, label);
+  rows.forEach(([tab, id, title, strength]) => {
+    const a = h('button', {class: 'lnkRow', type: 'button'}, f);
+    if (strength && STR[strength]) h('span', {class: 'lnkStr', style: `background:var(${STR[strength][1]})`}, a, strength);
+    h('span', {class: 'lnkId'}, a, id); h('span', {class: 'lnkT'}, a, title || ''); h('span', {class: 'lnkGo'}, a, '→');
+    a.onclick = () => goCard(tab, id);
+  });
 }
 function goCard(tab, id) { showTab(tab); setTimeout(() => { const c = document.getElementById('card-' + id); if (!c) return; c.scrollIntoView({behavior: 'smooth', block: 'center'}); c.classList.add('flash'); setTimeout(() => c.classList.remove('flash'), 1400); }, 60); }
 const byClaim = {}; INS.claims.forEach(c => byClaim[c.id] = []); INS.rebuttals.forEach(r => r.target.forEach(t => { if (byClaim[t]) byClaim[t].push(r); }));
 
 // 머리 카드: 책 정보 (접기 상태 기억)
 function renderBookcard() {
-  const I = BK.info || {}; const det = $('bookcard'); const sum = $('bookSum'); const box = $('bookBody'); sum.innerHTML = ''; box.innerHTML = '';
+  const I = BK.info || {};
+  const cv = $('cover'); if (cv && I.cover) { cv.src = I.cover; cv.hidden = false; cv.onclick = () => cv.classList.toggle('big'); } const det = $('bookcard'); const sum = $('bookSum'); const box = $('bookBody'); sum.innerHTML = ''; box.innerHTML = '';
   h('span', {class: 'bt'}, sum, `『${I.title || D.title}』`); if (I.subtitle) h('span', {class: 'bs'}, sum, I.subtitle);
-  h('span', {class: 'bm'}, sum, [I.author, I.translator && `${I.translator} 옮김`, I.pub_date ? I.pub_date.split('(')[0].trim() : I.year].filter(Boolean).join(' · '));
+  h('span', {class: 'bm'}, sum, [I.author, I.translator && (/편역|옮김|번역/.test(I.translator) ? I.translator : `${I.translator} 옮김`), I.pub_date ? I.pub_date.split('(')[0].trim() : I.year].filter(Boolean).join(' · '));
   const dl = h('dl', {}, box);
   const row = (k, v) => { if (!v) return; const d = h('div', {}, dl); h('dt', {}, d, k); h('dd', {}, d, v); };
-  row('지은이 · 옮긴이', [I.author, I.translator && `${I.translator} 옮김`].filter(Boolean).join(' · '));
+  row(I.translator ? '지은이 · 옮긴이' : '지은이', [I.author, I.translator && (/편역|옮김|번역/.test(I.translator) ? I.translator : `${I.translator} 옮김`)].filter(Boolean).join(' · '));
   row('출판사', [I.publisher, I.imprint && `(${I.imprint})`].filter(Boolean).join(' '));
-  row('한국어판 출간', I.pub_date || I.year);
-  row('원서', I.original_title);
-  row('원서 출판사 · 출간', [I.original_publisher, I.original_pub_date].filter(Boolean).join(' · '));
+  const orig = I.lang && I.lang !== 'ko';   // 원서 자체를 처리한 책
+  row(orig ? '출간' : '한국어판 출간', I.pub_date || I.year);
+  if (!orig || (I.original_title && I.original_title !== I.title)) {
+    row('원서', I.original_title);
+    row('원서 출판사 · 출간', [I.original_publisher, I.original_pub_date].filter(Boolean).join(' · '));
+  }
   row('쪽수', [I.pages_printed && `${I.pages_printed}쪽`, I.pdf_pages && `PDF ${I.pdf_pages}쪽`].filter(Boolean).join(' · '));
   row('ISBN', I.isbn);
-  row('이전 번역판', Array.isArray(I.prior_editions) ? I.prior_editions.join(' / ') : I.prior_editions);
+  row(orig ? '한국어 번역서' : '다른 번역서', Array.isArray(I.prior_editions) ? I.prior_editions.join('\n') : I.prior_editions);
   row('분야', I.genre);
+  row('비고', I.note);
   if (I.info_sources) h('div', {class: 'sub src-note'}, box, `책 정보 출처: ${I.info_sources}`);
   let open = true; try { open = localStorage.getItem('bookc-bookcard') !== 'closed'; } catch (e) {}
   det.open = open; det.addEventListener('toggle', () => { try { localStorage.setItem('bookc-bookcard', det.open ? 'open' : 'closed'); } catch (e) {} });
 }
 
+
+// 리뷰 본문을 '총평 + 섹션 카드'로 나눈다 (## 기준)
+function sectionize(root) {
+  const nodes = [...root.childNodes].filter(n => !(n.nodeType === 3 && !n.textContent.trim()));
+  const HX = nodes.some(n => n.nodeName === 'H2') ? 'H2' : 'H4'; if (!nodes.some(n => n.nodeName === HX)) return;
+  root.innerHTML = '';
+  const lead = h('div', {class: 'rvLead'}, root), grid = h('div', {class: 'rvGrid'}, root);
+  let cur = null;
+  nodes.forEach(n => {
+    if (n.nodeName === 'H1') return;
+    if (n.nodeName === HX) { cur = h('section', {class: 'rvSec'}, grid); n.className = 'rvH'; cur.appendChild(n); return; }
+    if (n.nodeName === 'P' && n.firstChild && n.firstChild.nodeName === 'STRONG' && /[.:]\s*$/.test(n.firstChild.textContent)) n.classList.add('rvItem');
+    (cur || lead).appendChild(n);
+  });
+  if (!lead.childNodes.length) lead.remove();
+}
+
+// 장별 흐름 ↔ 핵심 주장 연결선 (주장의 쪽 표시가 속한 장)
+function linkFlowClaims() {
+  const split = $('flow').closest('.split'); if (!split) return;
+  const F = BK.flow || [], pageCh = p => (F.find(f => f.pages && p >= f.pages[0] && p <= f.pages[1]) || {}).id;
+  const pairs = [];
+  INS.claims.forEach(c => { const set = new Set(); (c.html.match(/p(\d{3})(?:-b\d+)?/g) || []).forEach(a => { const ch = pageCh(+a.slice(1, 4)); if (ch) set.add(ch); }); set.forEach(ch => pairs.push([ch, c.id])); });
+  split.classList.add('linked');
+  let svg = split.querySelector('svg.links'); if (!svg) { svg = el('svg', {class: 'links'}, null); split.appendChild(svg); }
+  const lis = {}; split.querySelectorAll('#flow li[data-ch]').forEach(li => lis[li.dataset.ch] = li);
+  const cards = {}; INS.claims.forEach(c => { const d = document.getElementById('card-' + c.id); if (d) cards[c.id] = d; });
+  const deg = {}; pairs.forEach(([a, b]) => { deg[a] = (deg[a] || 0) + 1; deg[b] = (deg[b] || 0) + 1; });
+  Object.entries(lis).forEach(([k, li]) => { let b = li.querySelector('.lkN'); if (!b) b = h('span', {class: 'lkN'}, li.querySelector('.fh')); b.textContent = deg[k] ? `주장 ${deg[k]}` : ''; });
+  function draw() {
+    svg.innerHTML = '';
+    const R = split.getBoundingClientRect(); svg.setAttribute('width', R.width); svg.setAttribute('height', R.height);
+    if (getComputedStyle(split).gridTemplateColumns.split(' ').length < 2) return;
+    pairs.forEach(([ch, k]) => {
+      const a = lis[ch], b = cards[k]; if (!a || !b) return;
+      const ra = a.querySelector('.fh').getBoundingClientRect(), rb = b.querySelector('h3').getBoundingClientRect();
+      const x1 = a.closest('.panel').getBoundingClientRect().right - R.left, y1 = ra.top + ra.height / 2 - R.top;
+      const x2 = b.closest('.panel').getBoundingClientRect().left - R.left, y2 = rb.top + rb.height / 2 - R.top;
+      const mx = (x1 + x2) / 2;
+      const p = el('path', {d: `M${x1} ${y1} C${mx} ${y1} ${mx} ${y2} ${x2} ${y2}`, class: 'lk', 'data-ch': ch, 'data-k': k}, svg);
+      el('circle', {cx: x1, cy: y1, r: 3, class: 'lkDot', 'data-ch': ch, 'data-k': k}, svg); el('circle', {cx: x2, cy: y2, r: 3, class: 'lkDot', 'data-ch': ch, 'data-k': k}, svg);
+    });
+  }
+  function hl(ch, k) {
+    const on = (x) => (ch && x.dataset.ch === ch) || (k && x.dataset.k === k);
+    const act = !!(ch || k); split.classList.toggle('lkAct', act);
+    svg.querySelectorAll('.lk,.lkDot').forEach(x => x.classList.toggle('on', act && on(x)));
+    const rel = new Set(pairs.filter(([a, b]) => (ch && a === ch) || (k && b === k)).flatMap(([a, b]) => [a, b]));
+    Object.entries(lis).forEach(([id, li]) => li.classList.toggle('lkOn', act && rel.has(id)));
+    Object.entries(cards).forEach(([id, d]) => d.classList.toggle('lkOn', act && rel.has(id)));
+  }
+  let pop = document.getElementById('lkPop'); if (!pop) { pop = h('div', {id: 'lkPop', role: 'tooltip'}, split.closest('.viz-root') || document.body); }
+  const chOf = id => F.find(f => f.id === id) || {}, clOf = id => INS.claims.find(c => c.id === id) || {};
+  function showPop(anchor, head, rows) {
+    pop.innerHTML = ''; if (!rows.length) { pop.classList.remove('on'); return; }
+    h('div', {class: 'lpH'}, pop, head);
+    rows.forEach(([id, t, sub]) => { const r = h('div', {class: 'lpR'}, pop); h('span', {class: 'lpId'}, r, id); const b = h('div', {}, r); h('div', {class: 'lpT'}, b, t || ''); if (sub) h('div', {class: 'lpS'}, b, sub); });
+    const a = anchor.getBoundingClientRect(), gap = 16, vw = document.documentElement.clientWidth;
+    const card = split.closest('.card') || split, pr = card.getBoundingClientRect();
+    const room = vw - pr.right - gap - 12; let W = 300, x;
+    if (room >= 220) { W = Math.min(320, room); x = pr.right + gap; }
+    else { W = 280; x = a.left - W - gap; if (x < 8) x = Math.min(vw - W - 8, a.right + gap); }
+    pop.style.left = x + 'px'; pop.style.width = W + 'px';
+    pop.classList.add('on');
+    const ph = pop.offsetHeight, vh = window.innerHeight; let y = a.top; y = Math.max(8, Math.min(y, vh - ph - 8));
+    pop.style.top = y + 'px';
+  }
+  const hidePop = () => pop.classList.remove('on');
+  Object.entries(lis).forEach(([id, li]) => {
+    li.onmouseenter = () => { hl(id, null); const ks = pairs.filter(p => p[0] === id).map(p => p[1]); showPop(li, `${chOf(id).label || id}에서 나온 주장 ${ks.length}개`, ks.map(k => [k, clOf(k).title, `반박 ${(byClaim[k] || []).length}개`])); };
+    li.onmouseleave = () => { hl(null, null); hidePop(); };
+  });
+  Object.entries(cards).forEach(([id, d]) => {
+    d.onmouseenter = () => { hl(null, id); const cs = pairs.filter(p => p[1] === id).map(p => p[0]); const rb = byClaim[id] || [];
+      showPop(d, `${id} 근거가 나온 장 ${cs.length}개`, cs.map(c => { const f = chOf(c); return [String(+c || c), f.label, f.pages ? `PDF ${f.pages[0]}–${f.pages[1]}쪽 · ${Math.max(1, Math.round(f.chars / 500))}분` : '']; }).concat(rb.length ? [['', `반박 ${rb.length}개`, rb.map(r => `${r.strength} ${r.id}`).join(' · ')]] : [])); };
+    d.onmouseleave = () => { hl(null, null); hidePop(); };
+  });
+  window.addEventListener('scroll', hidePop, {passive: true});
+  requestAnimationFrame(draw);
+  if (!split._ro) { split._ro = new ResizeObserver(() => requestAnimationFrame(draw)); split._ro.observe(split); document.querySelectorAll('.tabs button, [data-tab]').forEach(b => b.addEventListener('click', () => setTimeout(draw, 60))); }
+  split._draw = draw;
+}
 // 한눈에 보기
 let revKey = null;
 function renderGlance() {
@@ -156,15 +254,16 @@ function renderGlance() {
     h('span', {class: 'sub'}, meta, `${v.title ? v.title + ' · ' : ''}${v.chars.toLocaleString()}자`);
     if (m.stance_used != null) h('span', {class: 'sub'}, meta, m.stance_used ? '· 내 입장 반영' : '· 내 입장 없이 작성(개인 경험 부분은 빈자리)');
     const ch = $('revChecks'); ch.innerHTML = '';
-    if (m.checks) { const g = h('div', {class: 'checks'}, ch); Object.entries(m.checks).forEach(([k, x]) => { const d = h('div', {}, g); h('span', {class: x.pass ? 'ok' : 'no'}, d, x.pass ? '✓ ' : '✕ '); d.appendChild(document.createTextNode(k + (x.note ? ` — ${x.note}` : ''))); }); }
-    setHTML($('revBody'), v.html); wireAnchors($('revBody'));
+    if (false && m.checks) { const E = Object.entries(m.checks), ok = E.filter(([, x]) => x.pass).length; const hd = h('div', {class: 'ckHead'}, ch); h('b', {}, hd, '자체 점검'); h('span', {class: 'ckScore' + (ok < E.length ? ' bad' : '')}, hd, `${ok}/${E.length} 통과`); const ul = h('ul', {class: 'ckList'}, ch); E.forEach(([k, x]) => { const li = h('li', {}, ul); h('span', {class: 'ckIco' + (x.pass ? '' : ' no')}, li, x.pass ? '✓' : '✕'); const d = h('div', {}, li); h('div', {class: 'ckName'}, d, k); if (x.note) h('div', {class: 'ckNote'}, d, x.note); }); }
+    setHTML($('revBody'), v.html); sectionize($('revBody')); wireAnchors($('revBody'));
   }
   // 장별 흐름
   const fl = $('flow'); fl.innerHTML = '';
-  (BK.flow || []).forEach(f => { const li = h('li', {}, fl); const hd = h('div', {class: 'fh'}, li); h('b', {}, hd, f.label); h('span', {class: 'mins'}, hd, `${Math.max(1, Math.round(f.chars / 500))}분`); const sp = h('span', {class: 'ft'}, li); sp.innerHTML = f.text.replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'})[c]).replace(/\b(p\d{3}(?:-b\d+)?)\b/g, '<span class="anc" data-anc="$1">$1</span>'); wireAnchors(sp); });
+  (BK.flow || []).forEach(f => { const li = h('li', {'data-ch': f.id}, fl); const hd = h('div', {class: 'fh'}, li); h('b', {}, hd, f.label); h('span', {class: 'mins'}, hd, `${Math.max(1, Math.round(f.chars / 500))}분`); const sp = h('span', {class: 'ft'}, li); sp.innerHTML = f.text.replace(/`/g, '').replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'})[c]).replace(/\b(p\d{3}(?:-b\d+)?)\b/g, '<span class="anc" data-anc="$1">$1</span>'); wireAnchors(sp); });
   // 핵심 주장
   const cl = $('claims'); cl.innerHTML = ''; $('nClaims').textContent = `${INS.claims.length}개`;
-  INS.claims.forEach(c => card(cl, c, d => { const n = byClaim[c.id] || []; if (n.length) { const m = h('div', {class: 'meta'}, d); const ch_ = h('span', {class: 'chip'}, m, `반박 ${n.length}개 보기 →`); ch_.onclick = () => goCard('crit', n[0].id); } }, true));
+  INS.claims.forEach(c => card(cl, c, null, d => { const n = byClaim[c.id] || []; linkList(d, `이 주장에 대한 반박 ${n.length}개`, n.map(r => ['crit', r.id, r.title, r.strength])); }));
+  linkFlowClaims();
   // 장 지도
   renderHeat();
   // 질문
@@ -213,7 +312,7 @@ function renderCrit() {
   const rb = $('rebuttals'); rb.innerHTML = ''; $('nReb').textContent = `${INS.rebuttals.length}개`;
   INS.rebuttals.forEach(r => card(rb, r, d => { const m = h('div', {class: 'meta'}, d); const st = STR[r.strength];
     if (st) { const s_ = h('span', {class: 'str'}, m); h('i', {style: `width:${{강: 36, 중: 24, 약: 12}[r.strength]}px;background:var(${st[1]})`}, s_); s_.appendChild(document.createTextNode(`강도 ${st[0]}`)); }
-    if (r.type) m.appendChild(document.createTextNode(`  ·  ${r.type}  ·  `)); r.target.forEach(t => { const ch = h('span', {class: 'chip'}, m, `${t} 주장 보기`); ch.onclick = () => goCard('glance', t); }); }, true));
+    if (r.type) m.appendChild(document.createTextNode(`  ·  ${r.type}`)); }, d => { const cm = Object.fromEntries(INS.claims.map(c => [c.id, c])); linkList(d, '반박 대상 주장', r.target.map(t => ['glance', t, (cm[t] || {}).title])); }));
   // 외부 비평
   const cr = $('critiques'); cr.innerHTML = ''; cr.className = 'crit';
   (BK.critiques || []).forEach((c, i) => { const d = h('details', i === 0 ? {open: ''} : {}, cr); h('summary', {}, d, c.title); const b = h('div', {class: 'prose'}, d); setHTML(b, c.html);

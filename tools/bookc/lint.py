@@ -51,7 +51,11 @@ def run(book: Book, chapters: list[str] | None = None) -> dict:
         body = re.sub(r"<!--.*?-->", "", text)
         body_nolinks = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", body)
         body_nolinks = re.sub(r"^---.*?---", "", body_nolinks, flags=re.S)
-        for tok in sorted(set(ARTIFACT_RE.findall(body_nolinks)) - allowed - {"X"}):
+        latin_book = book.manifest.get("book", {}).get("lang", "ko") != "ko"   # 원서: 로마자는 본문
+        toks = set(ARTIFACT_RE.findall(body_nolinks))
+        if latin_book:
+            toks = {t for t in toks if not t.isalpha()}
+        for tok in sorted(toks - allowed - {"X"}):
             if tok.strip() and not tok.startswith("|"):
                 warnings.append(f"{ch['id']}: OCR 잔재 의심 '{tok}'")
         if "|" in re.sub(r"^>?\s*\|.*$", "", body_nolinks, flags=re.M):
@@ -59,7 +63,10 @@ def run(book: Book, chapters: list[str] | None = None) -> dict:
         for mt in PERCENT_RE.finditer(body_nolinks):
             warnings.append(f"{ch['id']}: % 오인식 의심 '{body_nolinks[max(0, mt.start() - 8):mt.end() + 4]}'")
         for wrong, right in confusions.items():
-            n = body_nolinks.count(wrong)
+            if latin_book and wrong[:1].isalnum() and wrong[-1:].isalnum():   # 원서: 단어 단위로만 센다
+                n = len(re.findall(r"(?<![A-Za-z])" + re.escape(wrong) + r"(?![A-Za-z])", body_nolinks))
+            else:
+                n = body_nolinks.count(wrong)
             if n:
                 warnings.append(f"{ch['id']}: 혼동형 '{wrong}'(→{right}) {n}회")
         unsure = body_nolinks.count("[?")

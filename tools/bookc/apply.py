@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from .common import Book, pid, read_json, write_json
 
-LIST_RE = re.compile(r"^\s*(\d+\.|[-•*])\s")
+LIST_RE = re.compile(r"^\s*(\d{1,2}\.|[-•*])\s")   # 1909. 같은 연도는 목록 아님
 
 
 def run_page(book: Book, page: int) -> dict:
@@ -33,7 +33,7 @@ def run_page(book: Book, page: int) -> dict:
             lines[lid]["text"] = t
             lines[lid]["fixed"] = True
     for lid, k in rev.get("kind", {}).items():
-        if lid in lines:
+        if lid in lines and lines[lid]["kind"] != "drop":   # delete가 kind보다 우선
             lines[lid]["kind"] = k
     for lid in rev.get("para_start", []):
         if lid in lines: lines[lid]["para_start"] = True
@@ -95,6 +95,10 @@ def run_page(book: Book, page: int) -> dict:
         elif cur["lines"]:
             cur["joins"].append(joins.get(cur["lines"][-1][0], None))
         cur["lines"].append((obj["id"], obj["text"]))
+    # 쪽 끝 줄의 join(다음 쪽으로 이어지는 결합)을 문단에 남긴다
+    for b in blocks:
+        if b.get("lines") and joins.get(b["lines"][-1][0]):
+            b["tail_join"] = joins[b["lines"][-1][0]]
     # 문단 첫 줄이 들여쓰기 없이 시작하면(=앞 쪽/앞 블록에서 이어짐) cont 표시
     for b in blocks:
         if b["type"] == "para" and b["lines"]:

@@ -20,7 +20,7 @@ description: book-companion 4단계. 1차로 장별 요약(L2 절·L1 장)과 �
 
 1차가 남은 장마다 서브에이전트(general-purpose)를 하나씩 띄운다. **한 메시지에 여러 Agent 호출**로 동시에 최대 4개까지 띄운다. 지시 내용:
 
-- 읽을 것: `PLUGIN/references/conventions.md`의 5절, 이 장의 `source.md` 전체, 이 장 `img/`의 도표(Read), `glossary.md`
+- 읽을 것: `PLUGIN/references/conventions.md`의 5·7절, 이 장의 `source.md` 전체, 이 장 `img/`의 도표(Read), `glossary.md`
 - 쓸 것 ① `<slug>/study.md`
   - frontmatter에 `book`, `chapter`, `layer: study`, `pages`
   - `## L1 장 요약` 5–8문장
@@ -34,7 +34,7 @@ description: book-companion 4단계. 1차로 장별 요약(L2 절·L1 장)과 �
 
 1. 처음이면 `reading/_carry.md`를 만든다. 넣을 것: 책 정보, 장 목록(`$BC outline $B`), `research/highlights.md`·`critiques.md`의 요지 5줄, `watchlist.md`의 질문 번호 목록.
 2. 2차가 남은 첫 장부터 **한 장씩** 진행한다. 서브에이전트 하나로 하거나, 책이 짧으면(본문 6만 자 이하) 직접 한다.
-   - 읽을 것: conventions.md의 6절, `reading/_carry.md`, 직전 장 `reading/<id>.md`, `research/watchlist.md`, 이 장의 `study.md`(1차 결과), `source.md` 전체
+   - 읽을 것: conventions.md의 6·7절, `reading/_carry.md`, 직전 장 `reading/<id>.md`, `research/watchlist.md`, 이 장의 `study.md`(1차 결과), `source.md` 전체
    - 쓸 것: `reading/<id>.md`에 아래 절을 **덧붙인다**. `## 도표 읽기`는 그대로 둔다.
      - `## 흐름 메모`: 읽는 순서대로 5–15개. 각 메모 끝에 앵커 `(p045-b3)`를 단다. 내용은 저자의 논지 전개, 근거의 강약, 앞 장과의 연결, 놀라운 점, 의문
      - `## watchlist 답`: 이 장에서 답이 나온 질문 번호와 답(앵커 포함). 새로 생긴 질문은 `## 새 질문`에 적는다
@@ -54,6 +54,7 @@ description: book-companion 4단계. 1차로 장별 요약(L2 절·L1 장)과 �
 - 끝나면 `stage-end`, `run-end status=done`을 기록하고 progress.html을 보낸다. 도중에 멈추면 `run-end status=stopped note=사유`를 기록한다.
 ## 규칙
 
+- **언어**: 독자에게 보이는 글은 모두 한국어로 쓴다. 원문 인용·용어는 한국어 뒤에 괄호나 인용으로 붙인다(conventions.md 7절). 원문 층(source.md)은 번역하지 않는다.
 - study.md에는 원문에 있는 것만 쓴다. 해석, 평가, 외부 의견은 reading/에 쓴다.
 - 요약 문장에는 반드시 앵커나 쪽 범위를 단다.
 - 통독 도중 원문 오류(OCR 누락 등)를 발견하면 reading 메모에 `[원문 확인 필요 p045]`로 적고 계속한다. 끝에 목록으로 보고한다.

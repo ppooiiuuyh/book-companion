@@ -73,8 +73,17 @@ details summary{cursor:pointer;color:var(--text-secondary)}
 .icard{background:var(--surface-1);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
 .icard h3{font-size:14px;margin:0 0 6px;display:flex;gap:8px;align-items:baseline}
 .icard h3 .id{color:var(--muted);font-variant-numeric:tabular-nums;font-weight:600}
-.icard p{margin:4px 0}.icard ul{margin:4px 0;padding-left:18px}
+.icard p{margin:6px 0}.icard ul{margin:6px 0;padding-left:18px}.icard{line-height:1.75;font-size:14px}.icard li{margin:5px 0}
 .icard.flash{outline:2px solid var(--seq)}
+.lnk{margin-top:10px;padding-top:8px;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:2px}
+.lnkHead{font-size:11px;color:var(--muted);margin-bottom:2px}
+.lnkRow{all:unset;display:flex;align-items:center;gap:8px;padding:5px 8px;margin:0 -8px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text-primary)}
+.lnkRow:hover{background:var(--page)}
+.lnkStr{flex:none;font-size:11px;font-weight:700;color:#fff;border-radius:4px;padding:0 6px;line-height:18px}
+.lnkId{flex:none;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+.lnkT{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lnkGo{flex:none;color:var(--muted)}
+.lnkRow:hover .lnkGo{color:var(--text-primary)}
 .anc{display:inline-block;font-size:11px;padding:0 5px;border-radius:4px;border:1px solid var(--border);color:var(--text-secondary);cursor:help;font-variant-numeric:tabular-nums}
 .chip{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;margin-right:4px}
 .str{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary)}
@@ -149,6 +158,7 @@ details.bookcard[open]>summary::after{transform:rotate(-135deg)}
 details.bookcard>summary .bt{font-size:19px;font-weight:750}.bookcard .bs{color:var(--text-secondary)}
 details.bookcard>summary .bm{color:var(--muted);font-size:13px}
 #bookBody{padding:0 22px 18px;border-top:1px solid var(--grid)}
+#bookBody dd{white-space:pre-line}
 .bookcard dl{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px 22px;margin:16px 0 4px}
 .bookcard dl>div{display:flex;flex-direction:column;gap:2px}
 .bookcard dt{font-size:11px;text-transform:none;color:var(--muted);letter-spacing:.02em}.bookcard dd{font-size:14px;margin:0}
@@ -160,7 +170,18 @@ details.bookcard>summary .bm{color:var(--muted);font-size:13px}
 .oneline li{position:relative;padding-left:16px}.oneline li::before{content:"";position:absolute;left:2px;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--accent)}
 .oneline b{font-weight:700;margin-right:2px}.oneline p{margin:4px 0}
 /* 핵심 요약: 두 패널 */
-.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px;position:relative}
+.split.linked{column-gap:110px}
+svg.links{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+svg.links .lk{fill:none;stroke:var(--seq);stroke-width:1.3;opacity:.35;transition:opacity .15s,stroke-width .15s}
+svg.links .lkDot{fill:var(--seq);opacity:.35}
+.split.lkAct svg.links .lk{opacity:.06}.split.lkAct svg.links .lkDot{opacity:.1}
+svg.links .lk.on{opacity:.95!important;stroke-width:2.4}svg.links .lkDot.on{opacity:1!important}
+#flow li,#claims .icard{transition:background .15s,box-shadow .15s,opacity .15s}
+.split.lkAct #flow li:not(.lkOn),.split.lkAct #claims .icard:not(.lkOn){opacity:.45}
+#flow li.lkOn{background:color-mix(in srgb,var(--seq) 8%,transparent);border-radius:8px}
+#claims .icard.lkOn{box-shadow:0 0 0 2px var(--seq)}
+.lkN{font-size:11px;color:var(--seq);margin-left:6px;font-weight:600}
 @media (max-width:960px){.split{grid-template-columns:1fr}}
 .panel{background:color-mix(in srgb,var(--text-primary) 2.5%,var(--surface-1));border:1px solid var(--grid);border-radius:12px;padding:16px 16px 6px;min-width:0}
 .panel>header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid var(--grid)}
@@ -210,16 +231,51 @@ details.bookcard>summary .bm{color:var(--muted);font-size:13px}
 #readerBtn{position:fixed;right:22px;bottom:22px;z-index:7;font:inherit;font-weight:700;font-size:13px;border:none;border-radius:999px;padding:11px 18px;
   background:var(--text-primary);color:var(--surface-1);box-shadow:0 6px 20px rgba(0,0,0,.18);cursor:pointer}
 body.reading #readerBtn{display:none}
-#revBody{max-width:800px}.stars{color:var(--text-primary);letter-spacing:.05em}
+.revWrap{max-width:none}
+#revBody{font-size:15px;line-height:1.8}#revBody p{margin:0 0 12px}#revBody p:last-child{margin-bottom:0}#revBody h1{display:none}
+.rvLead{font-size:16px;line-height:1.85;padding:18px 22px;margin-bottom:16px;border-radius:10px;background:var(--page);border-left:4px solid var(--seq)}
+.rvGrid{columns:2;column-gap:16px}
+@media(max-width:980px){.rvGrid{columns:1}}
+.rvSec{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--surface-1);break-inside:avoid;margin:0 0 16px;display:inline-block;width:100%;box-sizing:border-box}
+#revBody .rvH{font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--text-secondary);margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+#revBody .rvItem{padding-left:12px;border-left:3px solid var(--border)}
+#revBody .rvItem strong{display:block;color:var(--text-primary);margin-bottom:2px}
+#revChecks:empty{display:none}
+#revChecks{position:sticky;top:16px;background:var(--page);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.ckHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ckHead b{font-size:13px}
+.ckScore{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;color:var(--good-text);border:1px solid var(--good)}
+.ckScore.bad{color:var(--critical);border-color:var(--critical)}
+.ckList{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.ckList li{display:grid;grid-template-columns:18px 1fr;gap:8px;align-items:start}
+.ckIco{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;background:var(--good);margin-top:1px}
+.ckIco.no{background:var(--critical)}
+.ckName{font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.4}
+.ckNote{font-size:12px;color:var(--text-secondary);line-height:1.45;margin-top:1px}.stars{color:var(--text-primary);letter-spacing:.05em}
 #tip{border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14)}
+#oneline mark,.icard mark,#revBody mark,.crit mark{background:linear-gradient(transparent 55%,color-mix(in srgb,var(--warning) 38%,transparent) 55%);color:inherit;padding:0 1px;font-weight:600}
+#lkPop{position:fixed;z-index:50;background:var(--surface-1,#fff);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:12px 14px;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s;pointer-events:none;font-size:13px;line-height:1.5}
+#lkPop.on{opacity:1;transform:none}
+#lkPop .lpH{font-size:12px;font-weight:700;color:var(--seq);margin-bottom:8px}
+#lkPop .lpR{display:grid;grid-template-columns:28px 1fr;gap:6px;padding:5px 0;border-top:1px solid var(--border)}
+#lkPop .lpR:first-of-type{border-top:0}
+#lkPop .lpId{color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+#lkPop .lpT{color:var(--text-primary);font-weight:600}
+#lkPop .lpS{color:var(--text-secondary);font-size:12px}
+.headL{gap:16px;align-items:center;flex-wrap:nowrap}
+#cover{height:96px;width:auto;border-radius:4px;box-shadow:0 1px 6px rgba(0,0,0,.25);flex:none;cursor:zoom-in;transition:height .2s}
+#cover.big{height:320px;cursor:zoom-out}
 </style>
 </head>
 <body>
 <div class="viz-root">
   <div class="row topbar" style="justify-content:space-between">
-    <div>
-      <h1 id="title"></h1>
-      <div class="sub" id="subtitle"></div>
+    <div class="row headL">
+      <img id="cover" alt="표지" hidden>
+      <div>
+        <h1 id="title"></h1>
+        <div class="sub" id="subtitle"></div>
+      </div>
     </div>
     <div class="row">
       <span id="state" class="badge"><i class="dot"></i><span></span></span>
@@ -238,11 +294,11 @@ body.reading #readerBtn{display:none}
   <div class="pane" id="pane-glance" hidden>
     <div class="card hero"><div class="k">한 줄 요약</div><div id="oneline" class="oneline"></div></div>
     <div class="card"><div class="row" style="justify-content:space-between"><h2>리뷰</h2><div class="seg" id="revSeg"></div></div>
-      <div id="revMeta" class="row" style="margin-bottom:8px"></div><div id="revChecks"></div><div id="revBody" class="prose"></div></div>
+      <div id="revMeta" class="row" style="margin-bottom:12px"></div><div class="revWrap"><div id="revBody" class="prose"></div><div id="revChecks" hidden></div></div></div>
     <div class="card"><h2>핵심 요약</h2>
       <div class="split">
         <section class="panel"><header><span class="pt">장별 흐름</span><span class="sub">각 장의 L1 요약 앞부분 · 읽기 시간</span></header><ol class="flow" id="flow"></ol></section>
-        <section class="panel"><header><span class="pt">핵심 주장 <span class="sub" id="nClaims"></span></span><span class="stancebar"></span></header><div class="cards one" id="claims"></div></section>
+        <section class="panel"><header><span class="pt">핵심 주장 <span class="sub" id="nClaims"></span></span></header><div class="cards one" id="claims"></div></section>
       </div></div>
     <div class="card"><h2>장 지도</h2><div class="sub" style="margin-bottom:8px">장마다 핵심 주장·반박·도표 판정이 얼마나 몰려 있는지. 색이 진할수록 그 열에서 값이 큽니다. 읽기 안내는 이 값들로 자동으로 정한 것입니다.</div>
       <div style="overflow-x:auto"><table class="heat" id="heat"></table></div></div>
@@ -258,7 +314,7 @@ body.reading #readerBtn{display:none}
     <div class="card"><h2>주장별 반박 강도</h2>
       <div class="legend"><span><i style="background:var(--st-hi)"></i>강</span><span><i style="background:var(--st-mid)"></i>중</span><span><i style="background:var(--st-lo)"></i>약</span></div>
       <div id="rebChart"></div><div class="sub" id="rebNote"></div></div>
-    <div class="card"><div class="row" style="justify-content:space-between"><h2>반박해 볼 지점 <span class="sub" id="nReb"></span></h2><span class="stancebar"></span></div><div class="cards" id="rebuttals"></div></div>
+    <div class="card"><div class="row" style="justify-content:space-between"><h2>반박해 볼 지점 <span class="sub" id="nReb"></span></h2></div><div class="cards" id="rebuttals"></div></div>
     <div class="card"><h2>외부 비평 <span class="sub">(조사 단계에서 모은 평자·독자의 비판, 출처 번호는 research/sources.md)</span></h2><div id="critiques"></div></div>
     <div class="card"><h2>도표 신뢰도 <span class="sub" id="nFigs"></span></h2>
       <div class="sub" style="margin-bottom:8px">통독 1차에서 도표마다 본문 주장과 맞는지 판정한 결과입니다. 누르면 원문과 판정 이유가 열립니다.</div>
@@ -371,7 +427,7 @@ function scope(){if(sel.value==='all')return {runs, tasks:runs.flatMap(r=>Object
   const r=runs[+sel.value];return {runs:[r],tasks:Object.values(r.tasks),waves:Object.values(r.waves)}}
 
 // ---- 머리글 ----
-$('title').textContent = `북 컴패니언 · 『${D.title}』`;
+$('title').textContent = `『${D.title}』`;
 $('subtitle').textContent = `마지막 갱신 ${dt(T(D.generated))}` + (D.active?' · 실행 중에는 20초마다 새로 고침':'');
 const stEl=$('state'); if(isLive(lastRun)){stEl.classList.add('live');stEl.lastChild.textContent=`실행 중 · ${lastRun.name}${lastRun.stage?' · '+(D.stageLabel[lastRun.stage]||lastRun.stage):''}`}
 else{stEl.querySelector('.dot').style.background=css('--muted');stEl.lastChild.textContent= lastRun?`${lastRun.status==='done'?'완료':'멈춤'} · 마지막 실행 ${lastRun.name} ${({done:'완료',stopped:'중단',failed:'실패'})[lastRun.status]||'중단됨'}`:'실행 기록 없음'}

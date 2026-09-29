@@ -106,3 +106,12 @@ def typo(s: str, dash: bool = True) -> str:
         else:
             out.append(ch)
     return "".join(out)
+
+
+def tess_lang_args(lang: str | None = None) -> list[str]:
+    """OCR 언어 인자. 번들 모델(MODELS_DIR)에 있으면 그걸, 없으면 시스템 tessdata를 쓴다."""
+    lang = lang or "kor"
+    parts = lang.split("+")
+    if all((MODELS_DIR / f"{p}.traineddata").exists() for p in parts):
+        return ["--tessdata-dir", str(MODELS_DIR), "-l", lang]
+    return ["-l", lang]
